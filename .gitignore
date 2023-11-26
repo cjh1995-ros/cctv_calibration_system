@@ -1,0 +1,7 @@
+.vscode
+
+.env
+
+markers/__pycache__
+
+tests/__pycache__

@@ -1,11 +1,36 @@
 import unittest
-from markers.point import Feature2D, Feature3D
+
+from modules.markers.point import Feature2D, Feature3D
+import numpy as np
+
+
+
+
 
 class TestFeature2D(unittest.TestCase):
     def test_init(self):
         vec1 = Feature2D(1, 2)
         self.assertEqual(vec1.x, 1)
         self.assertEqual(vec1.y, 2)
+
+    def test_init_v1(self):
+        vec1 = Feature2D(1, 2)
+        
+        vec1.x = 3
+        self.assertEqual(vec1.x, 3)
+        self.assertEqual(vec1.y, 2)
+        self.assertEqual(vec1.xy[0], 3)
+        
+        vec1.y = 4
+        self.assertEqual(vec1.x, 3)
+        self.assertEqual(vec1.y, 4)
+        self.assertEqual(vec1.xy[1], 4)
+        
+        vec1.xy = np.array([5, 6], dtype=np.float32)
+        self.assertEqual(vec1.x, 5)
+        self.assertEqual(vec1.y, 6)
+        self.assertEqual(vec1.xy[0], 5)
+        self.assertEqual(vec1.xy[1], 6)
 
     def test_add(self):
         vec1 = Feature2D(1, 2)

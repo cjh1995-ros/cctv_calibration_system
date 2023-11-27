@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import List
-from markers import Vector2D, Vector3D
+from modules.markers import Vector2D, Vector3D
 
 
 
@@ -41,6 +41,9 @@ class Feature2D(Vector2D):
     def __repr__(self):
         return f"Feature2D: id: {self.id}, camera_id: {self.camera_id}, x: {self.x}, y: {self.y}"
     
+    def to_npy(self):
+        return self._xy
+
 
 
 class Feature3D(Vector3D):
@@ -66,3 +69,6 @@ class Feature3D(Vector3D):
     @id.setter
     def id(self, id: int):
         self._id = id
+        
+    def to_npy(self):
+        return self._xyz

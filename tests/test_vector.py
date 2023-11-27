@@ -1,5 +1,5 @@
 import unittest
-from markers import Vector2D, Vector3D
+from modules.markers import Vector2D, Vector3D
 
 class TestVector2D(unittest.TestCase):
     def test_init(self):

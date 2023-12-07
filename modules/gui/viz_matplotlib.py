@@ -8,8 +8,8 @@ from scipy.spatial.transform import Rotation as R
 
 
 class MatplotVisualizer(BaseVisualizer):
-    def __init__(self):
-        pass
+    def __init__(self, is_inv: bool = False):
+        self.is_inv = is_inv
     
     def to_vis_data(self, data: Any) -> Any:
         pass
@@ -78,8 +78,9 @@ class MatplotVisualizer(BaseVisualizer):
         t = camera.t
         
         # transform to world coordinate
-        Rmat = Rmat.T # inverse rotation
-        t = -Rmat @ t # inverse translation
+        if self.is_inv:
+            Rmat = Rmat.T # inverse rotation
+            t = -Rmat @ t # inverse translation
         
         x, y, z = t
         

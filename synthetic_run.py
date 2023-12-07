@@ -1,8 +1,24 @@
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from modules.cameras.generator import Generator
+from modules.gui.viz_matplotlib import MatplotVisualizer
 import numpy as np
+
+
+
+
+mv = MatplotVisualizer()
+
+
+default_cameras = Generator().generate_default()
+points_3d = np.random.rand(10, 3) * 3  # Replace with your 3D points
+
+mv.vis_3d(None, default_cameras, points_3d)
+
+
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
+# import numpy as np
 # from modules.cameras.generator import Generator
-from scipy.spatial.transform import Rotation as R
+# from scipy.spatial.transform import Rotation as R
 
 
 # def plot_camera(ax, position, rotation_matrix, length=1.0):

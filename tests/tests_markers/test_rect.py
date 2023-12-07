@@ -85,5 +85,15 @@ class TestRect3D(unittest.TestCase):
         self.assertIsInstance(npy_rect, np.ndarray, "Numpy array is not instance of np.ndarray")
         self.assertAlmostEqual(np.linalg.norm(npy_0 - npy_rect), 0.0, delta=1e-6, msg="Numpy array is not same")
     
+    def test_noisy(self):
+        rect = basic_case_0()
+        
+        rect.noisy(0.1)
+        
+        self.assertAlmostEqual(rect.corners[0].x, 0.0, delta=0.1, msg="Noisy is not working")
+        self.assertAlmostEqual(rect.corners[0].y, 0.0, delta=0.1, msg="Noisy is not working")
+        self.assertAlmostEqual(rect.corners[0].z, 0.0, delta=0.1, msg="Noisy is not working")
+    
+    
 if __name__ == '__main__':
     unittest.main()

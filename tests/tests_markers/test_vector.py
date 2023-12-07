@@ -74,5 +74,14 @@ class TestVector3D(unittest.TestCase):
         self.assertEqual(vec3.y, 1)
         self.assertEqual(vec3.y, 1)
 
+    def test_noisy(self):
+        vec1 = Vector3D(1, 2, 3)
+        sigma = 0.1
+        
+        vec1.noisy(sigma)
+        self.assertEqual(vec1.x, 1)
+        self.assertEqual(vec1.y, 2)
+        self.assertEqual(vec1.z, 3)
+
 if __name__ == '__main__':
     unittest.main()

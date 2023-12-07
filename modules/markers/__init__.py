@@ -9,10 +9,15 @@ class Vector2D:
     _xy: np.ndarray = field(init=False) 
     
     def __post_init__(self):
-        self._xy = np.array([self._x, self._y])
+        self._xy = np.array([self._x, self._y], dtype=np.float32)
     
     def norm(self):
         return np.linalg.norm(self.xy)
+    
+    
+    def noisy(self, sigma: float):
+        self.xy += np.random.normal(0, sigma, 2)
+        
     
     @property
     def x(self):
@@ -41,6 +46,12 @@ class Vector2D:
         self._xy = xy
         self._x = xy[0]
         self._y = xy[1]
+        
+        
+    @staticmethod
+    def random():
+        return Vector2D(np.random.rand(2))
+    
         
     def __add__(self, other):
         ret = Vector2D()
@@ -75,7 +86,7 @@ class Vector2D:
     
     def __repr__(self):
         return f"x: {self.x}, y: {self.y}, z: {self.z}"
-    
+
 
 
 @dataclass
@@ -86,10 +97,13 @@ class Vector3D:
     _xyz: np.ndarray = field(init=False)
     
     def __post_init__(self):
-        self._xyz = np.array([self._x, self._y, self._z])
+        self._xyz = np.array([self._x, self._y, self._z], dtype=np.float32)
     
     def norm(self):
         return np.linalg.norm(self.xyz)
+    
+    def noisy(self, sigma: float):
+        self.xyz += np.random.normal(0, sigma, 3)
     
     @property
     def x(self):

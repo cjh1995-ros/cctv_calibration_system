@@ -25,6 +25,16 @@ class Rect3D:
     _camera_id: List[int] = field(init=False)
     _corners: List[Feature3D] = field(init=False)
 
+    def noisy(self, sigma: float):
+        """
+        Add noise to the rectangle.
+
+        Args:
+            sigma (float): The standard deviation of the noise.
+        """
+        for corner in self.corners:
+            corner.noisy(sigma)
+
     @property
     def rect_id(self):
         """
@@ -171,6 +181,7 @@ class RoadMarker(Rect3D):
     _train_markers:         List[Feature3D] = field(init=False)
     CROSS_CHECK_CENTER:     ClassVar = CROSS_CHECK_CENTER
     CROSS_CHECK_TRAIN_IDX:  ClassVar = CROSS_CHECK_TRAIN_IDX
+    
     
     @property
     def is_opt(self):

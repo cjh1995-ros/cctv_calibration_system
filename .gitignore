@@ -2,6 +2,11 @@
 
 .env
 
-markers/__pycache__
+modules/__pycache__
+modules/cameras/__pycache__
+modules/gui/__pycache__
+modules/markers/__pycache__
+modules/system/__pycache__
 
-tests/__pycache__
+tests/tests_cameras/__pycache__
+tests/tests_markers/__pycache__

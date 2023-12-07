@@ -93,6 +93,7 @@ class Camera:
 
         # Distort points
         if self._dist_type != "NONE":
+            print(self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
             r_ds = DISTORTION_FUNC[self._dist_type](r_us, self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
             
             # Rescale the normalized pixels with rd / ru

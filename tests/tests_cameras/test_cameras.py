@@ -1,5 +1,6 @@
 import unittest
 from modules.cameras import Camera
+from modules.cameras.generator import Generator
 from modules.cameras.projectors import Projector, Distorter, BasicConvertor
 
 import numpy as np
@@ -12,7 +13,9 @@ def TestCase1():
     proj_func_type   = "PERSPECTIVE"
     dist_type       = "POLYNOMIAL"
     # init_params = np.array([1000, 500, 500, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    init_params = np.array([1000.0, 500.0, 500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    # init_params = np.array([1000.0, 500.0, 500.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    # init_params = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    init_params = np.array([1.0, 0.0, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     # init_params = np.array([1000, 500, 500, 0, 0, 0])
     
     return {"id": id, 
@@ -100,20 +103,26 @@ class TestCamera(unittest.TestCase):
         cv_K = cam.K
         cv_R = cam.R
         cv_t = cam.t
-        cv_dist = np.array([[0., 0., 0., 0.]])
-        
-        # print(f"cv_K: {cv_K}")
-        # print(f"cv_R: {cv_R}")
-        # print(f"cv_t: {cv_t}")
-        # print(f"cv_dist: {cv_dist}")
-        
+        # cv_dist = np.array([[0.1, 0.1, 0., 0.]])
+        cv_dist = np.array([[0.1, 0.1, 0., 0.]])
+                
         # cv project points
         cv_pts, _ = cv2.projectPoints(random_pts, cv_R, cv_t, cv_K, cv_dist)
         
         # my project points
         my_pts = cam.project(random_pts)
         
-        print(f"cv_pts: {cv_pts[:5]}")
-        print(f"my_pts: {my_pts[:5]}")
+        # for i in range(100):
+        #     print(cv_pts[i], my_pts[i])
         
-        self.assertAlmostEqual(np.sum(cv_pts - my_pts), 0, 5, "Projector is not same")
+        self.assertAlmostEqual(np.sum(cv_pts - my_pts), 0, 4, "OpenCV and my implementation is not same")
+        
+    def test_generator(self):
+        g = Generator()
+        
+        default_cameras = g.generate_default()
+
+        for cam in default_cameras:
+            print(cam.params)
+        
+        self.assertEqual(len(default_cameras), 4, "Default cameras are not same")

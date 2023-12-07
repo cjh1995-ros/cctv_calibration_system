@@ -105,7 +105,7 @@ class Projector:
 
     @staticmethod
     def theta_u(pts):
-        return np.arctan(pts[:, 0] ** 2 + pts[:, 1] ** 2)
+        return np.arctan(np.sqrt(pts[:, 0] ** 2 + pts[:, 1] ** 2))
     
     @staticmethod
     def perspective(pts, params):
@@ -178,12 +178,7 @@ class Distorter:
         
     @staticmethod
     def polynomial(ru, k):
-        n_k = len(k)
-        rd = 0
-        for i in range(n_k + 1):
-            inc = 1 if i == 0 else k[i-1] * ru ** (2 * i)
-            rd += ru * inc
-        return rd
+        return ru * (1 + k[0] * ru ** 2 + k[1] * ru ** 4)
 
     @staticmethod
     def fov(ru, w):

@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Any
 from modules.cameras import Camera
 from modules.markers.rectangle import Rectangle
-from modules.markers.point import Feature3D
+from modules.markers.point import Feature2D, Feature3D
 
 
 
@@ -38,7 +38,7 @@ class Optimizer:
 class ObjectFunction:
     """Solve a least squares problem using scipy.optimize.least_squares."""
     @staticmethod
-    def simple_BA(params: np.ndarray, cameras: List[Camera], points: List[Any], projections: List[Any]):
+    def simple_BA(params: np.ndarray, cameras: List[Camera], points: List[Feature3D], projections: List[Any]):
         """
         Compute the sum of squared differences between projected and observed 2D points.
         Points are Feature3Ds.

@@ -224,8 +224,8 @@ class UnProjector:
 
 class UnDistorter:
     @staticmethod
-    def polynomial(ru, k):
-        ...
+    def polynomial(rd, k):
+        assert len(k) == 2, "Polynomial distortion should have only 2 parameters"
         
         
     @staticmethod
@@ -235,3 +235,4 @@ class UnDistorter:
     @staticmethod
     def equidistant(rd):
         return np.tan(rd)
+    

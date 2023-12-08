@@ -1,5 +1,5 @@
+from modules.generator import BasicGenerator
 from modules.cameras import Camera
-
 from typing import Dict, List
 import json
 import numpy as np
@@ -7,8 +7,8 @@ import numpy as np
 
 
 
-class Generator:
-    def generate_camera(self, datas: List[Dict]):
+class CameraGenerator(BasicGenerator):
+    def generate(self, datas: List[Dict]):
         cameras = []
         
         for i, data in enumerate(datas):
@@ -28,7 +28,7 @@ class Generator:
         with open(file_path, 'r') as f:
             datas = json.load(f)
             
-        return self.generate_camera(datas)
+        return self.generate(datas)
     
 
     def generate_default(self):
@@ -85,4 +85,24 @@ class Generator:
                       "dist_type": "NONE",
                       "init_params": [1000.0, 500.0, 500.0, rvec4[0], rvec4[1], rvec4[2], 1.5, -2.5, 3.0]})
                 
-        return self.generate_camera(datas)
+        return self.generate(datas)
+    
+    
+from modules.markers.point import Feature3D
+from modules.markers.rectangle import Rect3D
+
+class MarkerGenerator(BasicGenerator):
+    def generate(self, datas: List[Dict]):
+        """"""
+            
+    def generate_from_file(self, file_path: str):
+        """"""    
+
+    def generate_point_default(self):
+        """"""
+        
+        
+        
+class RectangleGenerator(BasicGenerator):
+    def generate(self, datas: List[Dict]):
+        """"""

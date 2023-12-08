@@ -1,6 +1,6 @@
 import unittest
 from modules.cameras import Camera
-from modules.cameras.generator import Generator
+from modules.generator.generator import CameraGenerator
 from modules.cameras.projectors import Projector, Distorter, BasicConvertor
 
 import numpy as np
@@ -118,7 +118,7 @@ class TestCamera(unittest.TestCase):
         self.assertAlmostEqual(np.sum(cv_pts - my_pts), 0, 4, "OpenCV and my implementation is not same")
         
     def test_generator(self):
-        g = Generator()
+        g = CameraGenerator()
         
         default_cameras = g.generate_default()
 

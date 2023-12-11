@@ -7,7 +7,9 @@ modules/gui/__pycache__
 modules/markers/__pycache__
 modules/system/__pycache__
 modules/generator/__pycache__
-
+modules/optimizer/__pycache__
 
 tests/tests_cameras/__pycache__
 tests/tests_markers/__pycache__
+
+__pycache__

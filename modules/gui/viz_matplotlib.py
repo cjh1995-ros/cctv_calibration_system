@@ -92,7 +92,7 @@ class MatplotVisualizer(BaseVisualizer):
             direction = Rmat[:, 2]
             u, v, w = direction * length
             ax.quiver(x, y, u, v, color='b')
-            ax.text(x, y, f'Camera {camera.id}', color='black')
+            ax.text(x, y, f'{camera.id}', color='black')
         
         if dimension == 3:
             for i in range(3):
@@ -101,7 +101,7 @@ class MatplotVisualizer(BaseVisualizer):
                 u, v, w = direction * length
                 ax.quiver(x, y, z, u, v, w, color=['b', 'g', 'r'][i])
 
-            ax.text(x, y, z, f'Camera {camera.id}', color='black')
+            ax.text(x, y, z, f'{camera.id}', color='black')
 
 
     def _normalizing_axis(self, ax):

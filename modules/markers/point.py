@@ -11,12 +11,11 @@ class Feature2D(Vector2D):
     Args:
         Vector2D (_type_): _description_
     """
-    _id:            int = -1 # feature id in camera
+    _id:            int # feature id in camera
     _camera_id:     int = -1 # camera id
 
     def __post_init__(self):
         super().__post_init__()
-        self._id = -1
         self._camera_id = -1
         
     @property
@@ -44,7 +43,10 @@ class Feature2D(Vector2D):
     def to_npy(self):
         return self._xy
 
-
+    def from_npy(self, id, camera_id, data: np.ndarray):
+        self.id = id
+        self.camera_id = camera_id
+        self._xy = data
 
 class Feature3D(Vector3D):
     """
@@ -56,24 +58,30 @@ class Feature3D(Vector3D):
     
     def __post_init__(self):
         super().__post_init__()
-        self._id = -1
+        self._camera_id = []
         
     @property
     def id(self):
         return self._id
     
-    @property
-    def camera_id(self):
-        return self._camera_id
-    
     @id.setter
     def id(self, id: int):
         self._id = id
+    
+    @property
+    def camera_id(self):
+        return self._camera_id
+
+    @camera_id.setter
+    def camera_id(self, camera_id: List[int]):
+        self._camera_id = camera_id    
         
     def to_npy(self):
         return self._xyz
     
-    def from_npy(self, data: np.ndarray):
+    def from_npy(self, id:int, camera_id: List[int], data: np.ndarray):
+        self.id = id
+        self.camera_id = camera_id
         self._xyz = data
 
 

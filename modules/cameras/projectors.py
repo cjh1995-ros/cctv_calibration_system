@@ -221,6 +221,25 @@ class UnDistorter:
     @staticmethod
     def polynomial(rd, k):
         assert len(k) == 2, "Polynomial distortion should have only 2 parameters"
+
+        ru = rd
+        init_diff = np.inf
+        step = 0.1
+        
+        for i in range(100):
+            diff = rd - ru * (1 + k[0] * ru ** 2 + k[1] * ru ** 4)
+            
+            if init_diff > np.abs(diff): step *= 1.2
+            else: step *= -0.5
+            
+            if np.all(np.abs(diff) < 1e-3): 
+                print(f"Early break, iter: {i}")
+                break
+            
+            init_diff = np.abs(diff)
+            ru -= step * ru * (1 + k[0] * ru ** 2 + k[1] * ru ** 4) / (1 + 3 * k[0] * ru ** 2 + 5 * k[1] * ru ** 4)
+        
+        return ru
         
         
     @staticmethod

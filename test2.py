@@ -2,8 +2,8 @@ from modules.gui.viz_matplotlib import MatplotVisualizer
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import least_squares
 from copy import deepcopy
-from autograd import numpy as np
-# import numpy as np
+# from autograd import numpy as np
+import numpy as np
 
 
 
@@ -27,7 +27,7 @@ def project(pts:np.ndarray, intrinsic:np.ndarray, extrinsic:np.ndarray):
     new_pts[:,0] = new_pts[:,0] * fx + cx
     new_pts[:,1] = new_pts[:,1] * fy + cy
 
-    return pts
+    return new_pts
 
 def calc_z(theta, pts, line_pts1, line_pts2):
     line_vec = line_pts2 - line_pts1

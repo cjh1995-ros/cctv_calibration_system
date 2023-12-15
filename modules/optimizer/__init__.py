@@ -1,5 +1,5 @@
 from scipy.optimize import least_squares
-import numpy as np
+import autograd.numpy as np
 from typing import List, Any
 from modules.cameras import Camera
 from modules.markers.rectangle import Rect3D

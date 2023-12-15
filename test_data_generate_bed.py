@@ -186,10 +186,7 @@ if __name__ == '__main__':
         "case2": test_pcl_02,
         "case3": test_pcl_03,
     }
-    points = POINT["case1"]()
     
-    # vz = MatplotVisualizer(is_inv=True)
-    # vz.vis_3d(None, cameras, points)
     
     # Save datas as npy
     cam = np.array([cam.initial_params for cam in cameras])
@@ -200,3 +197,8 @@ if __name__ == '__main__':
         points = POINT[case]()
         np.save(f"./data/points_{case}.npy", points)
         print(f"Save points_{case}.npy")
+
+        
+    # # Visualize
+    # vz = MatplotVisualizer(is_inv=True)
+    # vz.vis_3d(None, cameras, points)

@@ -1,5 +1,6 @@
 from scipy.spatial.transform import Rotation as R
-import numpy as np
+# import numpy as np
+from autograd import numpy as np
 
 
 def conv_transform2pose(transform: np.ndarray) -> np.ndarray:
@@ -44,3 +45,30 @@ def conv_pose2transform(pose: np.ndarray) -> np.ndarray:
     
     return np.concatenate([rvec, tvec])
 
+def from_axis_angle_to_matrix(rvec: np.ndarray):
+    theta = np.linalg.norm(rvec)
+    r = rvec / theta
+    
+    r_x, r_y, r_z = r
+    
+    c = np.cos(theta)
+    s = np.sin(theta)
+    
+    R = np.array([
+        [c + r_x**2*(1-c), r_x*r_y*(1-c) - r_z*s, r_x*r_z*(1-c) + r_y*s],
+        [r_y*r_x*(1-c) + r_z*s, c + r_y**2*(1-c), r_y*r_z*(1-c) - r_x*s],
+        [r_z*r_x*(1-c) - r_y*s, r_z*r_y*(1-c) + r_x*s, c + r_z**2*(1-c)]
+    ], dtype=np.float64)
+    
+    return R
+
+def from_matrix_to_axis_angle(R: np.ndarray):
+    theta = np.arccos((np.trace(R) - 1) / 2)
+    
+    r_x = (R[2, 1] - R[1, 2]) / (2 * np.sin(theta))
+    r_y = (R[0, 2] - R[2, 0]) / (2 * np.sin(theta))
+    r_z = (R[1, 0] - R[0, 1]) / (2 * np.sin(theta))
+    
+    rvec = np.array([r_x, r_y, r_z]) * theta
+    
+    return rvec

@@ -30,7 +30,7 @@ class TestCamera(unittest.TestCase):
                      tmp["proj_func_type"], 
                      tmp["dist_type"])
         
-        cam.init_params(tmp["init_params"])
+        cam.initial_params = tmp["init_params"]
         
         self.assertEqual(cam._id, tmp["id"], "ID is not same")
         self.assertEqual(cam._intr_opt_type, tmp["intr_opt_type"], "Intr opt type is not same")
@@ -90,7 +90,8 @@ class TestCamera(unittest.TestCase):
                      tmp["is_extr_opt"], 
                      tmp["proj_func_type"], 
                      tmp["dist_type"])
-        cam.init_params(tmp["init_params"])
+        
+        cam.initial_params = tmp["init_params"]
         
         cv_K = cam.K
         cv_R = cam.R

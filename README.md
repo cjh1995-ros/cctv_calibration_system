@@ -115,11 +115,12 @@ There will be sample code for undistorting, triangulation, PnP method, how to us
 
 ### TODO - Develop
 
-- [ ] Multi camera mode
+- [ ] Live mode
 - [ ] Chessboard, April tag, ArUco etc...
 - [ ] Export camera model as scripts
+- [ ] Multi camera mode
 
-### TODO - Code
+### TODO - Sample Code
 
 - [ ] Sample code for undistorting images
 - [ ] Sample code for triangulation

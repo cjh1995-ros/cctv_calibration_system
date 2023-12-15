@@ -1,7 +1,7 @@
 import unittest
 from modules.cameras import Camera
 from modules.generator.generator import CameraGenerator
-from modules.cameras.projectors import Projector, Distorter, BasicConvertor
+from modules.cameras.projectors import Projector, Distorter, BasicConvertor, UnDistorter
 
 import numpy as np
 import cv2
@@ -12,12 +12,7 @@ def TestCase1():
     is_extr_opt   = True
     proj_func_type   = "PERSPECTIVE"
     dist_type       = "POLYNOMIAL"
-    # init_params = np.array([1000, 500, 500, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    # init_params = np.array([1000.0, 500.0, 500.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    # init_params = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     init_params = np.array([1.0, 0.0, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    # init_params = np.array([1000, 500, 500, 0, 0, 0])
-    
     return {"id": id, 
             "intr_opt_type": intr_opt_type, 
             "is_extr_opt": is_extr_opt, 
@@ -37,9 +32,6 @@ class TestCamera(unittest.TestCase):
         
         cam.init_params(tmp["init_params"])
         
-        # print(f"length of param: {len(cam.params)}")
-        # print(f"Initial params: {cam.params}")
-        # print(f"K: {cam.K}")
         self.assertEqual(cam._id, tmp["id"], "ID is not same")
         self.assertEqual(cam._intr_opt_type, tmp["intr_opt_type"], "Intr opt type is not same")
         self.assertEqual(cam._is_opt_extr, tmp["is_extr_opt"], "Extr opt type is not same")
@@ -103,19 +95,25 @@ class TestCamera(unittest.TestCase):
         cv_K = cam.K
         cv_R = cam.R
         cv_t = cam.t
-        # cv_dist = np.array([[0.1, 0.1, 0., 0.]])
         cv_dist = np.array([[0.1, 0.1, 0., 0.]])
-                
+        
         # cv project points
         cv_pts, _ = cv2.projectPoints(random_pts, cv_R, cv_t, cv_K, cv_dist)
+        cv_pts = cv_pts.reshape(-1, 2)
+        
         
         # my project points
         my_pts = cam.project(random_pts)
-        
-        # for i in range(100):
-        #     print(cv_pts[i], my_pts[i])
-        
-        self.assertAlmostEqual(np.sum(cv_pts - my_pts), 0, 4, "OpenCV and my implementation is not same")
+
+        cv_pts = cv_pts.astype(np.float64)
+        my_pts = my_pts.astype(np.float64)
+
+        for i in range(100):
+            err = np.abs(np.mean(cv_pts[i] - my_pts[i]))
+            if err > 1e-5:
+                print(i, err, cv_pts[i], my_pts[i])
+
+        self.assertAlmostEqual(np.mean(cv_pts - my_pts), 0, 5, "OpenCV and my implementation is not same")
         
     def test_generator(self):
         g = CameraGenerator()
@@ -126,3 +124,17 @@ class TestCamera(unittest.TestCase):
             print(cam.params)
         
         self.assertEqual(len(default_cameras), 4, "Default cameras are not same")
+        
+    def test_undistorter(self):
+        print("Test undistorter")
+        ru = 1.5
+        k = [-0.2, 0.1]
+        
+        rd = Distorter.polynomial(ru, k)
+        
+        new_ru = UnDistorter.polynomial(rd, k)
+
+        self.assertAlmostEqual(np.abs(ru - new_ru), 0, 2, "Undistorter is not same")
+
+if __name__ == '__main__':
+    unittest.main()

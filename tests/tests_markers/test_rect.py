@@ -90,9 +90,9 @@ class TestRect3D(unittest.TestCase):
         
         rect.noisy(0.1)
         
-        self.assertAlmostEqual(rect.corners[0].x, 0.0, delta=0.1, msg="Noisy is not working")
-        self.assertAlmostEqual(rect.corners[0].y, 0.0, delta=0.1, msg="Noisy is not working")
-        self.assertAlmostEqual(rect.corners[0].z, 0.0, delta=0.1, msg="Noisy is not working")
+        self.assertNotEqual(rect.corners[0].x, 0.0, msg="Noisy is not working")
+        self.assertNotEqual(rect.corners[0].y, 0.0, msg="Noisy is not working")
+        self.assertNotEqual(rect.corners[0].z, 0.0, msg="Noisy is not working")
     
     
 if __name__ == '__main__':

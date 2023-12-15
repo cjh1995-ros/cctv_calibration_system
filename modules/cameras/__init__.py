@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, Callable
-import numpy as np
+# import numpy as np
+from autograd import numpy as np
 from modules.cameras.projectors import Projector, Distorter, BasicConvertor
 
 
@@ -61,6 +62,7 @@ class Camera:
     K:                  np.ndarray = field(init=False)
     R:                  np.ndarray = field(init=False)
     t:                  np.ndarray = field(init=False)
+    dtype:              Any = np.float32
     
     def __post_init__(self):
         self.n_opt_intr    = INTR_OPT_PARAM_NUM[self._intr_opt_type]
@@ -71,10 +73,10 @@ class Camera:
         self.n_total = self.n_opt_intr + self.n_proj_func + self.n_dist + self.n_opt_extr
         
         # Init K and dist
-        self.K = np.zeros((3, 3), dtype=np.float32)
+        self.K = np.zeros((3, 3), dtype=self.dtype)
         
         # Init params for optimization
-        self.params = np.zeros(self.n_total, dtype=np.float32)
+        self.params = np.zeros(self.n_total, dtype=self.dtype)
     
     def project(self, pts: np.ndarray) -> np.ndarray:
         """
@@ -93,7 +95,7 @@ class Camera:
 
         # Distort points
         if self._dist_type != "NONE":
-            print(self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
+            # print(self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
             r_ds = DISTORTION_FUNC[self._dist_type](r_us, self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
             
             # Rescale the normalized pixels with rd / ru

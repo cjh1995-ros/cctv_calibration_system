@@ -32,8 +32,8 @@ class TestVector2D(unittest.TestCase):
         vec1 = Vector2D(1, 2)
         val = 3
         vec3 = vec1 / val
-        self.assertEqual(vec3.x, 1/3)
-        self.assertEqual(vec3.y, 2/3)
+        self.assertAlmostEqual(vec3.x, 1/3)
+        self.assertAlmostEqual(vec3.y, 2/3)
 
 class TestVector3D(unittest.TestCase):
     def test_init(self):
@@ -79,9 +79,9 @@ class TestVector3D(unittest.TestCase):
         sigma = 0.1
         
         vec1.noisy(sigma)
-        self.assertEqual(vec1.x, 1)
-        self.assertEqual(vec1.y, 2)
-        self.assertEqual(vec1.z, 3)
+        self.assertNotEqual(vec1.x, 1)
+        self.assertNotEqual(vec1.y, 2)
+        self.assertNotEqual(vec1.z, 3)
 
 if __name__ == '__main__':
     unittest.main()

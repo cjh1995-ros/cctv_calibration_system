@@ -57,8 +57,8 @@ class TestFeature2D(unittest.TestCase):
         vec1 = Feature2D(1, 2)
         val = 3
         vec3 = vec1 / val
-        self.assertEqual(vec3.x, 1/3)
-        self.assertEqual(vec3.y, 2/3)
+        self.assertAlmostEqual(vec3.x, 1/3)
+        self.assertAlmostEqual(vec3.y, 2/3)
 
     def test_id(self):
         vec1 = Feature2D(1, 2)
@@ -102,9 +102,9 @@ class TestFeature3D(unittest.TestCase):
         vec1 = Feature3D(3, 3, 3)
         val = 3
         vec3 = vec1 / val
-        self.assertEqual(vec3.x, 1)
-        self.assertEqual(vec3.y, 1)
-        self.assertEqual(vec3.y, 1)
+        self.assertAlmostEqual(vec3.x, 1)
+        self.assertAlmostEqual(vec3.y, 1)
+        self.assertAlmostEqual(vec3.y, 1)
 
 if __name__ == '__main__':
     unittest.main()

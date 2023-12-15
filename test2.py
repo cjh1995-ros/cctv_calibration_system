@@ -2,7 +2,8 @@ from modules.gui.viz_matplotlib import MatplotVisualizer
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import least_squares
 from copy import deepcopy
-import numpy as np
+from autograd import numpy as np
+# import numpy as np
 
 
 
@@ -124,6 +125,47 @@ def object_function_02(params, gt_pixels, extrinsics, xy):
     
     return error
 
+def object_function_025(params, gt_pixels, xy):
+    global history
+    
+    history.append(params)
+    
+    camera_params = params[:48].reshape(-1, 12)
+    intrinsics = camera_params[:, :6]
+    extrinsics = camera_params[:, 6:]
+    theta = params[-1]
+    
+    ### Make xyz points from theta and xy
+    # Init xyz
+    ones = np.ones_like(xy[:, :, 0])
+    xy1 = np.stack([xy[:, :, 0], xy[:, :, 1], ones], axis=-1)
+    
+    # Calc z
+    line_pts1 = np.array([2.4, 2.0, 1.0])
+    line_pts2 = np.array([2.4, 2.2, 1.0])
+    
+    zs = calc_z(theta, xy1[:, 3:, :], line_pts1, line_pts2)
+    
+    # Make new xyz with theta
+    new_xyz = deepcopy(xy1)
+    new_xyz[:, 3:, 2] += zs
+    
+    
+    ### Project new xyz
+    new_xyz = new_xyz.reshape(-1, 3)
+    
+    new_pixels = []
+    
+    for intr, extr in zip(intrinsics, extrinsics):
+        new_pixels.append(project(new_xyz, intr, extr))
+        
+    new_pixels = np.concatenate(new_pixels, axis=0)
+    
+    
+    ### Calculate error
+    error = (new_pixels - gt_pixels).ravel()
+    
+    return error
 
 def object_function_03(params, gt_pixels, extrinsics):
     global history
@@ -256,6 +298,11 @@ if __name__ == '__main__':
     # Case 2: Intrinsic and theta
     # inits = np.concatenate([init_intrs, [init_theta]], axis=0)
     # res = least_squares(object_function_02, inits, verbose=2, args=(gts, extrs, xy))
+
+    # Case 2.5: Intrinsic + Extrinsic + theta
+    # noisy_xy = xy + np.random.rand(*xy.shape) * 0.0005
+    # inits = np.concatenate([init_intrs_extrs.ravel(), [init_theta]], axis=0)
+    # res = least_squares(object_function_025, inits, verbose=2, args=(gts, xy))
     
     # Case 3: Intrinsic + 3D points
     # inits = np.concatenate([init_intrs, noisy_xyz.ravel()], axis=0)
@@ -264,5 +311,45 @@ if __name__ == '__main__':
     # Case 4: Intrinsic + Extrinsic + 3D Points
     inits = np.concatenate([init_intrs_extrs.ravel(), noisy_xyz.ravel()], axis=0)
     res = least_squares(object_function_04, inits, verbose=2, args=(gts,))
-
-    np.save("simple_ba.npy", np.array(history))
+    
+    camera_params = res.x[:48].reshape(-1, 12)
+    intrinsics = camera_params[:, :6]
+    extrinsics = camera_params[:, 6:]
+    
+    mean_intr = np.mean(intrinsics, axis=0)
+    mean_extr = np.mean(extrinsics, axis=0)
+    
+    print("Mean intrinsics")
+    print(mean_intr)
+    
+    for i, (intr, extr) in enumerate(zip(intrinsics, extrinsics)):
+        print(f"Camera {i}")
+        print(f"Intrinsics: {intr}")
+        print(f"Extrinsics: {extr}")
+        print()
+        
+    # Residual between points and gt markers
+    # theta = res.x[-1]
+    
+    # print(theta)
+    
+    # ### Make xyz points from theta and xy
+    # ones = np.ones_like(xy[:, :, 0])
+    # xy1 = np.stack([xy[:, :, 0], xy[:, :, 1], ones], axis=-1)
+    
+    # # Calc z
+    # line_pts1 = np.array([2.4, 2.0, 1.0])
+    # line_pts2 = np.array([2.4, 2.2, 1.0])
+    
+    # zs = calc_z(theta, xy1[:, 3:, :], line_pts1, line_pts2)
+    
+    # # Make new xyz with theta
+    # new_xyz = deepcopy(xy1)
+    # new_xyz[:, 3:, 2] += zs
+    
+    # new_xyz = new_xyz.reshape(-1, 3)
+    
+    new_xyz = res.x[48:].reshape(-1, 3)
+    print("Residual between points and gt markers")
+    print(np.linalg.norm(new_xyz - xyz_theta.reshape(-1, 3)))
+    

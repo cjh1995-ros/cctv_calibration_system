@@ -3,7 +3,8 @@ from modules.generator import BasicGenerator
 from modules.cameras import Camera
 from typing import Dict, List
 import json
-import numpy as np
+# import numpy as np
+from autograd import numpy as np
 
 
 
@@ -85,32 +86,32 @@ class CameraGenerator(BasicGenerator):
         transform4 = conv_pose2transform(pose4)
         
         datas.append({"id": 0, 
-                      "intr_opt_type": "FXYCXY", 
+                      "intr_opt_type": "FOCAL", 
                       "is_extr_opt": True, 
                       "proj_func_type": "PERSPECTIVE", 
-                      "dist_type": "NONE",
-                      "init_params": [1000.0, 500.0, 500.0, transform1[0], transform1[1], transform1[2], transform1[3], transform1[4], transform1[5]]})
+                      "dist_type": "POLYNOMIAL",
+                      "init_params": [1000.0, 500.0, 500.0, -0.2, 0.1, transform1[0], transform1[1], transform1[2], transform1[3], transform1[4], transform1[5]]})
 
         datas.append({"id": 1, 
-                      "intr_opt_type": "FXYCXY", 
+                      "intr_opt_type": "FOCAL", 
                       "is_extr_opt": True, 
                       "proj_func_type": "PERSPECTIVE", 
-                      "dist_type": "NONE",
-                      "init_params": [1000.0, 500.0, 500.0, transform2[0], transform2[1], transform2[2], transform2[3], transform2[4], transform2[5]]})
+                      "dist_type": "POLYNOMIAL",
+                      "init_params": [1000.0, 500.0, 500.0, -0.2, 0.1, transform2[0], transform2[1], transform2[2], transform2[3], transform2[4], transform2[5]]})
 
         datas.append({"id": 2, 
-                      "intr_opt_type": "FXYCXY", 
+                      "intr_opt_type": "FOCAL", 
                       "is_extr_opt": True, 
                       "proj_func_type": "PERSPECTIVE", 
-                      "dist_type": "NONE",
-                      "init_params": [1000.0, 500.0, 500.0, transform3[0], transform3[1], transform3[2], transform3[3], transform3[4], transform3[5]]})
+                      "dist_type": "POLYNOMIAL",
+                      "init_params": [1000.0, 500.0, 500.0, -0.2, 0.1, transform3[0], transform3[1], transform3[2], transform3[3], transform3[4], transform3[5]]})
 
         datas.append({"id": 3, 
-                      "intr_opt_type": "FXYCXY", 
+                      "intr_opt_type": "FOCAL", 
                       "is_extr_opt": True, 
                       "proj_func_type": "PERSPECTIVE", 
-                      "dist_type": "NONE",
-                      "init_params": [1000.0, 500.0, 500.0, transform4[0], transform4[1], transform4[2], transform4[3], transform4[4], transform4[5]]})
+                      "dist_type": "POLYNOMIAL",
+                      "init_params": [1000.0, 500.0, 500.0, -0.2, 0.1, transform4[0], transform4[1], transform4[2], transform4[3], transform4[4], transform4[5]]})
                 
         return self.generate(datas)
     

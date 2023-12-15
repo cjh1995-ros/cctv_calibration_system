@@ -61,6 +61,27 @@ class MatplotVisualizer(BaseVisualizer):
         
         plt.show()
 
+    def compare_points(self, pts1, pts2, pts3):
+        """Compare pts1 and pts2. Add vector from pts1 to pts2"""
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Plot pts1
+        ax.scatter(pts1[:, 0], pts1[:, 1], pts1[:, 2], color='r')
+        
+        # Plot pts2
+        ax.scatter(pts2[:, 0], pts2[:, 1], pts2[:, 2], color='b')
+
+        # Plot pts3
+        ax.scatter(pts3[:, 0], pts3[:, 1], pts3[:, 2], color='g')
+    
+        self._normalizing_axis(ax)
+    
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        plt.show()        
+
     
     def _draw_cameras(self, ax, cameras: List[Any], length: float = 1.0 ,dimension: int = 3):
         """

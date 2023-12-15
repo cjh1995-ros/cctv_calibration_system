@@ -2,7 +2,7 @@
 Projection will be done in the following steps:
 
 """
-import numpy as np
+from autograd import numpy as np
 from scipy.spatial.transform import Rotation
 
 

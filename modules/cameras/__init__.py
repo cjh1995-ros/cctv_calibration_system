@@ -59,6 +59,7 @@ class Camera:
     _proj_func_type:    str
     _dist_type:         str
     _params:            np.ndarray = field(init=False)
+    _initial_params:    np.ndarray = field(init=False)
     K:                  np.ndarray = field(init=False)
     R:                  np.ndarray = field(init=False)
     t:                  np.ndarray = field(init=False)
@@ -108,7 +109,12 @@ class Camera:
         
         return BasicConvertor.dehomogeneous(pts)
     
-    def init_params(self, initial_params: np.ndarray):
+    @property
+    def initial_params(self):
+        return self._initial_params
+    
+    @initial_params.setter
+    def initial_params(self, initial_params: np.ndarray):
         """_summary_
         Args:
             params (np.ndarray): 
@@ -117,20 +123,21 @@ class Camera:
                 params should be like this: [intr, projection(sphere), dist, extrinsic]
                 ex) [f, cx, cy, alpha, gamma, ..., k1, k2, r, t]
         """
+        self._initial_params = initial_params
         m = 0
         n = 3
-        self.init_K(initial_params[m:n])
+        self.init_K(self._initial_params[m:n])
         
         m = n
         n += self.n_proj_func
-        self.init_sphere(initial_params[m:n])
+        self.init_sphere(self._initial_params[m:n])
         
         m = n
         n += self.n_dist
-        self.init_dist(initial_params[m:n])
+        self.init_dist(self._initial_params[m:n])
         
-        self.init_transform(initial_params[-6:])
-        
+        self.init_transform(self._initial_params[-6:])
+
     
     def init_K(self, intr: np.ndarray):
         # Init K
@@ -204,12 +211,4 @@ class Camera:
         if self._is_opt_extr:
             self.R = self._params[-6:-3]
             self.t = self._params[-3:]
-        
-    def set_optimizing_params(self, optimizing_params: np.ndarray):
-        """_summary_
-        Change K, R, t. Others are determined by self._params
-        Args:
-            params (np.ndarray): parameters from optimizer. It should be full parameters.
-        """
-        self._params = optimizing_params
         

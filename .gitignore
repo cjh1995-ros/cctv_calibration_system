@@ -1,6 +1,8 @@
 .vscode
 .env
 
+data/
+
 modules/__pycache__
 modules/cameras/__pycache__
 modules/gui/__pycache__

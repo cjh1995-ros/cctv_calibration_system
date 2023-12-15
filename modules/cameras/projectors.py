@@ -232,8 +232,7 @@ class UnDistorter:
             if init_diff > np.abs(diff): step *= 1.2
             else: step *= -0.5
             
-            if np.all(np.abs(diff) < 1e-3): 
-                print(f"Early break, iter: {i}")
+            if (np.abs(diff) < 1e-3): 
                 break
             
             init_diff = np.abs(diff)

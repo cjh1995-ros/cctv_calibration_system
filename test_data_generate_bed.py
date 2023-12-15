@@ -14,7 +14,7 @@ def generate_cameras(datas: List[Dict]):
                         data['proj_func_type'],
                         data['dist_type'])
         
-        tmp.init_params(data['init_params'])
+        tmp.initial_params = data['init_params']
         
         cameras.append(tmp)
         
@@ -27,51 +27,64 @@ def test_cameras():
     
     ori1 = np.array([[1, 0, 0], 
                         [0, 0, 1], 
-                        [0, -1, 0]], dtype=np.float32)
+                        [0, -1, 0]], dtype=np.float64)
     
-    rot1 = np.array([-np.pi/6, np.pi/4, 0], dtype=np.float32)
+    rot1 = np.array([-np.pi/6, np.pi/4, 0], dtype=np.float64)
     ori1 = ori1 @ R.from_rotvec(rot1).as_matrix()
     
     ori_rvec1 = R.from_matrix(ori1).as_rotvec()
-    pos1 = np.array([-4.0, -4.0, 3.0], dtype=np.float32)
+    pos1 = np.array([-4.0, -4.0, 3.0], dtype=np.float64)
     pose1 = np.concatenate([ori_rvec1, pos1])
     transform1 = conv_pose2transform(pose1)
     
     ori2 = np.array([[1, 0, 0], 
                         [0, 0, 1], 
-                        [0, -1, 0]], dtype=np.float32)
+                        [0, -1, 0]], dtype=np.float64)
 
-    rot2 = np.array([-np.pi/6, -np.pi/4, 0], dtype=np.float32)
+    rot2 = np.array([-np.pi/6, -np.pi/4, 0], dtype=np.float64)
     ori2 = ori2 @ R.from_rotvec(rot2).as_matrix()
 
     ori_rvec2 = R.from_matrix(ori2).as_rotvec()
-    pos2 = np.array([4.0, -4.0, 3.0], dtype=np.float32)
+    pos2 = np.array([4.0, -4.0, 3.0], dtype=np.float64)
     pose2 = np.concatenate([ori_rvec2, pos2])
     transform2 = conv_pose2transform(pose2)
     
     ori3 = np.array([[1, 0, 0], 
                         [0, 0, 1], 
-                        [0, -1, 0]], dtype=np.float32)
+                        [0, -1, 0]], dtype=np.float64)
 
-    rot3 = np.array([0, -np.pi * 2/3, -np.pi/3], dtype=np.float32)
+    rot3 = np.array([0, -np.pi * 2/3, -np.pi/3], dtype=np.float64)
     ori3 = ori3 @ R.from_rotvec(rot3).as_matrix()
 
     ori_rvec3 = R.from_matrix(ori3).as_rotvec()
-    pos3 = np.array([4.0, 4.0, 3.0], dtype=np.float32)
+    pos3 = np.array([4.0, 4.0, 3.0], dtype=np.float64)
     pose3 = np.concatenate([ori_rvec3, pos3])
     transform3 = conv_pose2transform(pose3)
 
     ori4 = np.array([[1, 0, 0], 
                         [0, 0, 1], 
-                        [0, -1, 0]], dtype=np.float32)
-    pos4 = np.array([-4.0, 4.0, 3.0], dtype=np.float32) # 
+                        [0, -1, 0]], dtype=np.float64)
+    pos4 = np.array([-4.0, 4.0, 3.0], dtype=np.float64) # 
 
-    rot4 = np.array([0, np.pi * 2/3, np.pi/3], dtype=np.float32)
+    rot4 = np.array([0, np.pi * 2/3, np.pi/3], dtype=np.float64)
     ori4 = ori4 @ R.from_rotvec(rot4).as_matrix()
 
     ori_rvec4 = R.from_matrix(ori4).as_rotvec()
     pose4 = np.concatenate([ori_rvec4, pos4])
     transform4 = conv_pose2transform(pose4)
+
+    ori5 = np.array([[0, +1, 0], 
+                        [-1, 0, 0], 
+                        [0, 0, -1]], dtype=np.float64)
+    pos5 = np.array([0.0, 0.0, 5.0], dtype=np.float64) # 
+
+    # rot5 = np.array([0, np.pi * 2/3, np.pi/3], dtype=np.float64)
+    # ori5 = ori5 @ R.from_rotvec(rot5).as_matrix()
+
+    ori_rvec5 = R.from_matrix(ori5).as_rotvec()
+    pose5 = np.concatenate([ori_rvec5, pos5])
+    transform5 = conv_pose2transform(pose5)
+
     
     datas.append({"id": 0, 
                     "intr_opt_type": "FOCAL", 
@@ -100,6 +113,13 @@ def test_cameras():
                     "proj_func_type": "PERSPECTIVE", 
                     "dist_type": "POLYNOMIAL",
                     "init_params": [1000.0, 500.0, 500.0, -0.2, 0.1, transform4[0], transform4[1], transform4[2], transform4[3], transform4[4], transform4[5]]})
+
+    datas.append({"id": 4, 
+                    "intr_opt_type": "FOCAL", 
+                    "is_extr_opt": True, 
+                    "proj_func_type": "PERSPECTIVE", 
+                    "dist_type": "POLYNOMIAL",
+                    "init_params": [1000.0, 500.0, 500.0, -0.2, 0.1, transform5[0], transform5[1], transform5[2], transform5[3], transform5[4], transform5[5]]})
             
     return generate_cameras(datas)    
 
@@ -148,14 +168,14 @@ def test_pcl_03():
     zeros = np.zeros_like(xx)
     
     points = np.stack([xx, yy, zeros], axis=-1).reshape(4, 4, 3)
-    zs = np.linspace(1.0, 2.0, 2)
+    zs = np.linspace(0.5, 1.0, 2)
     
     points[2, :, 2] = zs[0]
     points[3, :, 2] = zs[1]
     
     points = points.reshape(-1, 3)
     
-    return points    
+    return points
 
 
 
@@ -166,7 +186,17 @@ if __name__ == '__main__':
         "case2": test_pcl_02,
         "case3": test_pcl_03,
     }
-    points = POINT["case2"]()
+    points = POINT["case1"]()
     
-    vz = MatplotVisualizer(is_inv=True)
-    vz.vis_3d(None, cameras, points)
+    # vz = MatplotVisualizer(is_inv=True)
+    # vz.vis_3d(None, cameras, points)
+    
+    # Save datas as npy
+    cam = np.array([cam.initial_params for cam in cameras])
+    np.save("./data/cameras.npy", cam)
+
+    
+    for case in ["case1", "case2", "case3"]:
+        points = POINT[case]()
+        np.save(f"./data/points_{case}.npy", points)
+        print(f"Save points_{case}.npy")

@@ -27,13 +27,13 @@ class MatplotVisualizer(BaseVisualizer):
 
         plt.show()
     
-    def vis_3d(self, images: List[Any], cameras: List[Any], data: Any) -> None:
+    def vis_3d(self, images: List[Any], cameras: List[Any], data: Any, scale: float = 10., marker: str = '.') -> None:
         """Visualize camera positions, orientations (as rotation matrices), and 3D points."""
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
         # Plot 3D points
-        ax.scatter(data[:, 0], data[:, 1], data[:, 2], color='b')
+        ax.scatter(data[:, 0], data[:, 1], data[:, 2], color='b', marker=marker, s=scale)
 
         # Plot cameras
         self._draw_cameras(ax, cameras)
@@ -47,10 +47,10 @@ class MatplotVisualizer(BaseVisualizer):
         
 
     
-    def vis_satellite(self, satellite_image: Any, cameras: List[Any], data: Any) -> None:
+    def vis_satellite(self, satellite_image: Any, cameras: List[Any], data: Any, scale: float = 10., marker: str = '.') -> None:
         fig, ax = plt.subplots()
 
-        ax.scatter(data[:, 0], data[:, 1], s=1)
+        ax.scatter(data[:, 0], data[:, 1], s=scale, marker=marker)
         
         self._draw_cameras(ax, cameras, length=0.1, dimension=2)
         

@@ -12,10 +12,14 @@ import numpy as np
 class Rect3D:
     """
     Represents a 3D rectangle.
-        0 ------ 3
+        0 ------ 3 --------> y_axis
         |        |
         |        |
         1 ------ 2
+        |
+        |
+        v
+        x_axis
     Args:
         _id (int): The ID of the rectangle in set.
         _camera_id (List[int]): The list of camera IDs associated with the rectangle.

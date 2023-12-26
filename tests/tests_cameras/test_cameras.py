@@ -109,10 +109,10 @@ class TestCamera(unittest.TestCase):
         cv_pts = cv_pts.astype(np.float64)
         my_pts = my_pts.astype(np.float64)
 
-        for i in range(100):
-            err = np.abs(np.mean(cv_pts[i] - my_pts[i]))
-            if err > 1e-5:
-                print(i, err, cv_pts[i], my_pts[i])
+        # for i in range(100):
+        #     err = np.abs(np.mean(cv_pts[i] - my_pts[i]))
+        #     if err > 1e-5:
+        #         print(i, err, cv_pts[i], my_pts[i])
 
         self.assertAlmostEqual(np.mean(cv_pts - my_pts), 0, 5, "OpenCV and my implementation is not same")
         
@@ -121,13 +121,13 @@ class TestCamera(unittest.TestCase):
         
         default_cameras = g.generate_default()
 
-        for cam in default_cameras:
-            print(cam.params)
+        # for cam in default_cameras:
+        #     print(cam.params)
         
         self.assertEqual(len(default_cameras), 4, "Default cameras are not same")
         
     def test_undistorter(self):
-        print("Test undistorter")
+        # print("Test undistorter")
         ru = 1.5
         k = [-0.2, 0.1]
         
@@ -136,6 +136,3 @@ class TestCamera(unittest.TestCase):
         new_ru = UnDistorter.polynomial(rd, k)
 
         self.assertAlmostEqual(np.abs(ru - new_ru), 0, 2, "Undistorter is not same")
-
-if __name__ == '__main__':
-    unittest.main()

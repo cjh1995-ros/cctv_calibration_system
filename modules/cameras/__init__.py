@@ -44,7 +44,7 @@ DISTORTION_PARAM_NUM : Dict[str, int] = \
 
 DISTORTION_FUNC : Dict[str, Callable] = \
 {
-    # "NONE":             Distorter.none,
+    "NONE":             Distorter.none,
     "POLYNOMIAL":       Distorter.polynomial,
     "FOV":              Distorter.fov,
     "EQUIDISTANT":      Distorter.equidistant,
@@ -53,25 +53,20 @@ DISTORTION_FUNC : Dict[str, Callable] = \
 
 @dataclass
 class Camera:
-    _id:                int
     _intr_opt_type:     str
-    _is_opt_extr:       bool
     _proj_func_type:    str
     _dist_type:         str
     _params:            np.ndarray = field(init=False)
     _initial_params:    np.ndarray = field(init=False)
     K:                  np.ndarray = field(init=False)
-    R:                  np.ndarray = field(init=False)
-    t:                  np.ndarray = field(init=False)
     dtype:              Any = np.float32
     
     def __post_init__(self):
         self.n_opt_intr    = INTR_OPT_PARAM_NUM[self._intr_opt_type]
-        self.n_opt_extr    = 6 if self._is_opt_extr else 0
         self.n_proj_func   = PROJECTION_PARAM_NUM[self._proj_func_type]
         self.n_dist        = DISTORTION_PARAM_NUM[self._dist_type]
         
-        self.n_total = self.n_opt_intr + self.n_proj_func + self.n_dist + self.n_opt_extr
+        self.n_total = self.n_opt_intr + self.n_proj_func + self.n_dist
         
         # Init K and dist
         self.K = np.zeros((3, 3), dtype=self.dtype)
@@ -81,27 +76,21 @@ class Camera:
     
     def project(self, pts: np.ndarray) -> np.ndarray:
         """
-        Project world coordinate points to image plane
+        Project camera coordinate points to image plane
         Args:
-            pts (np.ndarray): points in world coordinate, 3d
+            pts (np.ndarray): points in camera coordinate, 3d
 
         Returns:
             np.ndarray: projected point, 2d
         """
-        # Conver points from world to camera coordinate
-        pts = BasicConvertor.world_to_camera(pts, self.R, self.t)
-        
-        # Project points into normalized plane
+        # Project points into normalized plane, pt_u and ru
         pts, r_us = PROJECTOIN_FUNC[self._proj_func_type](pts, self._params[self.n_opt_intr:self.n_opt_intr + self.n_proj_func])              
 
         # Distort points
-        if self._dist_type != "NONE":
-            # print(self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
-            r_ds = DISTORTION_FUNC[self._dist_type](r_us, self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
-            
-            # Rescale the normalized pixels with rd / ru
-            pts = BasicConvertor.rescale(r_ds / r_us, pts)
+        r_ds = DISTORTION_FUNC[self._dist_type](r_us, self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
         
+        # Rescale the normalized pixels with rd / ru
+        pts = BasicConvertor.rescale(r_ds / r_us, pts)
         
         # Convert normalized coordinate to pixel coordinate
         pts = BasicConvertor.homogeneous(pts)
@@ -135,8 +124,6 @@ class Camera:
         m = n
         n += self.n_dist
         self.init_dist(self._initial_params[m:n])
-        
-        self.init_transform(self._initial_params[-6:])
 
     
     def init_K(self, intr: np.ndarray):
@@ -160,27 +147,12 @@ class Camera:
     def init_sphere(self, params: np.ndarray):
         """무조건 최적화"""
         self._params[self.n_opt_intr:self.n_opt_intr + self.n_proj_func] = params
-        
-    def init_transform(self, params: np.ndarray):
-        self.R = params[:3]
-        self.t = params[3:]
-        
-        if self._is_opt_extr:
-            self._params[-self.n_opt_extr:] = params
 
     def init_dist(self, params):
         """무조건 최적화"""
         self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist] = params
     
-    ######## Start of Setter and Getter ########
-    @property
-    def id(self):
-        return self._id
-    
-    @id.setter
-    def id(self, id: int):
-        self._id = id
-    
+    ######## Setter and Getter ########    
     @property
     def params(self):
         return self._params
@@ -206,9 +178,3 @@ class Camera:
             self.K[1, 1] = self._params[1]
             self.K[0, 2] = self._params[2]
             self.K[1, 2] = self._params[3]
-        
-        # 2. R, t
-        if self._is_opt_extr:
-            self.R = self._params[-6:-3]
-            self.t = self._params[-3:]
-        

@@ -20,7 +20,7 @@ class CameraGenerator(BasicGenerator):
                          data['proj_func_type'],
                          data['dist_type'])
             
-            tmp.init_params(data['init_params'])
+            tmp.initial_params = data['init_params']
             
             cameras.append(tmp)
             

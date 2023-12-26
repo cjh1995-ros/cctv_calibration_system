@@ -1,0 +1,14 @@
+{
+    "is_mono": true,
+    "is_fisheye": false,
+    "image_path": "data/",
+    
+    "board_pattern": [6, 9],
+    "board_size": [0.05, 0.05],
+
+    "intrinsic_type": "FOCAL",
+    "projection_type": "PERSPECTIVE",
+    "distortion_type": "POLYNOMIAL",
+
+    "visualize_results": false
+}

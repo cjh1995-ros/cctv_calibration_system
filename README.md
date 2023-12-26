@@ -113,16 +113,19 @@ In the json file, you should specify keywords like below.
 
 There will be sample code for undistorting, triangulation, PnP method, how to use with OpenCV.
 
+As the result of SciPy least square optimization is so bad, I decided to develop the code with Ceres-Solver.
+There will be code for C++ soon.
+
+
 ### TODO - Develop
 
-- [ ] Live mode
-- [ ] Chessboard, April tag, ArUco etc...
-- [ ] Export camera model as scripts
+- [ ] From Scipy to Ceres-Solver 
+- [x] Chessboard
 - [ ] Multi camera mode
 
 ### TODO - Sample Code
 
-- [ ] Sample code for undistorting images
+- [x] Sample code for undistorting images
 - [ ] Sample code for triangulation
 - [ ] Sample code for PnP method
 - [ ] Sample code for OpenCV

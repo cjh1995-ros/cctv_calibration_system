@@ -2,6 +2,7 @@
 Projection will be done in the following steps:
 
 """
+from modules import from_axis_angle_to_matrix, from_matrix_to_axis_angle
 from autograd import numpy as np
 from scipy.spatial.transform import Rotation
 
@@ -59,12 +60,12 @@ class BasicConvertor:
     """
     @staticmethod
     def world_to_camera(pts, R, t):
-        Rmat = Rotation.from_rotvec(R).as_matrix()
+        Rmat = from_axis_angle_to_matrix(R)
         return pts @ Rmat.T + t
 
     @staticmethod
     def camera_to_world(pts, R, t):
-        Rmat = Rotation.from_rotvec(R).as_matrix()
+        Rmat = from_axis_angle_to_matrix(R)
         inv_R = np.linalg.inv(Rmat)
         return pts @ inv_R.T - inv_R @ t
 
@@ -74,9 +75,7 @@ class BasicConvertor:
     
     @staticmethod
     def homogeneous(pts):
-        return np.hstack(
-            (pts, np.ones((len(pts), 1)))
-            ) # 이거 확인 필요
+        return np.hstack((pts, np.ones((len(pts), 1))))
     
     @staticmethod
     def dehomogeneous(pts):
@@ -173,7 +172,7 @@ class Distorter:
     Calculate rd from ru with distortion parameters.
     """
     @staticmethod
-    def none(ru):
+    def none(ru, k):
         return ru
         
     @staticmethod

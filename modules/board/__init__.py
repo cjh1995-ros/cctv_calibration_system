@@ -1,4 +1,6 @@
+from modules.cameras import Camera
 from modules.frame import BasicFrame
+from modules import conv_pose2transform, conv_transform2pose
 import logging
 import numpy as np
 import cv2
@@ -111,3 +113,19 @@ class Chessboard(BaseBoard):
             return False, None
         
         return found, corners.reshape(-1, 2)
+    
+    
+    def find_pose(self, image: BasicFrame, camera: Camera) -> bool:
+        """For now, there is no distortion. So, we can use solvePnP directly."""
+        corners = image.corners
+        found, rvec, tvec = cv2.solvePnP(self._points, corners, camera.K, np.array([0., 0., 0., 0.]))
+        
+        if not found:
+            self.logger.error("Chessboard pose is not found.")
+            return False
+        
+        rvec = rvec.ravel()
+        tvec = tvec.ravel()
+        
+        image.transform = conv_transform2pose(np.concatenate([rvec, tvec]))
+        return True

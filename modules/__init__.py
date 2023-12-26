@@ -5,50 +5,6 @@ from autograd import numpy as np
 
 
 
-
-
-def conv_transform2pose(transform: np.ndarray) -> np.ndarray:
-    """Convert transform matrix to pose vector.
-    
-    Args:
-        transform (np.ndarray): Transform matrix of shape (4, 4).
-    
-    Returns:
-        np.ndarray: Pose vector of shape (6,).
-    """
-    assert transform.shape == (6, )
-    
-    rvec = transform[:3]
-    tvec = transform[3:]
-    
-    Rmat = R.from_rotvec(rvec).as_matrix()
-    
-    ori = R.from_matrix(Rmat.T).as_rotvec()
-    pos = -Rmat @ tvec
-    
-    return np.concatenate([ori, pos])
-
-def conv_pose2transform(pose: np.ndarray) -> np.ndarray:
-    """Convert pose vector to transform matrix.
-    
-    Args:
-        pose (np.ndarray): Pose vector of shape (6,).
-    
-    Returns:
-        np.ndarray: Transform matrix of shape (4, 4).
-    """
-    assert pose.shape == (6, )
-    
-    ori = pose[:3]
-    pos = pose[3:] # -Rmat.T @ tvec -> tvec = -Rmat @ pos
-    
-    ori_mat = R.from_rotvec(ori).as_matrix() # R.T 
-    rvec = R.from_matrix(ori_mat.T).as_rotvec()
-    
-    tvec = -ori_mat.T @ pos
-    
-    return np.concatenate([rvec, tvec])
-
 def from_axis_angle_to_matrix(rvec: np.ndarray):
     theta = np.linalg.norm(rvec)
     r = rvec / theta
@@ -76,3 +32,46 @@ def from_matrix_to_axis_angle(R: np.ndarray):
     rvec = np.array([r_x, r_y, r_z]) * theta
     
     return rvec
+
+def conv_transform2pose(transform: np.ndarray) -> np.ndarray:
+    """Convert transform matrix to pose vector.
+    
+    Args:
+        transform (np.ndarray): Transform matrix of shape (4, 4).
+    
+    Returns:
+        np.ndarray: Pose vector of shape (6,).
+    """
+    assert transform.shape == (6, )
+    
+    rvec = transform[:3]
+    tvec = transform[3:]
+    
+    Rmat = from_axis_angle_to_matrix(rvec)
+    
+    ori = from_matrix_to_axis_angle(Rmat.T)
+    pos = -Rmat @ tvec
+    
+    return np.concatenate([ori, pos])
+
+def conv_pose2transform(pose: np.ndarray) -> np.ndarray:
+    """Convert pose vector to transform matrix.
+    
+    Args:
+        pose (np.ndarray): Pose vector of shape (6,).
+    
+    Returns:
+        np.ndarray: Transform matrix of shape (4, 4).
+    """
+    assert pose.shape == (6, )
+    
+    ori = pose[:3]
+    pos = pose[3:] # -Rmat.T @ tvec -> tvec = -Rmat @ pos
+    
+    ori_mat = from_axis_angle_to_matrix(ori)
+    rvec = from_matrix_to_axis_angle(ori_mat.T)
+    
+    tvec = -ori_mat.T @ pos
+    
+    return np.concatenate([rvec, tvec])
+

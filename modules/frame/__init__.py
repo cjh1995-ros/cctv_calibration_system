@@ -1,7 +1,7 @@
 from modules.cameras import Camera
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import cv2
 import numpy as np
 
@@ -10,31 +10,55 @@ import numpy as np
 
 
 # Frames with camera information.
-type Frames = Dict[Camera, List[BasicFrame]]
+type MonoCameraFrames = List[Camera, List[BasicFrame]]
+type MultiCameraFrames = List[MonoCameraFrames]
 
 @dataclass
 class BasicFrame:
-    path:       str
-    idx:        int
-    is_fisheye: bool = field(default=False)
-    shape:      tuple = field(init=False)
-    data:       np.ndarray = field(init=False)
-    corners:    np.ndarray = field(init=False)
-    pose:       np.ndarray = field(init=False)
+    path:           str
+    idx:            int
+    is_fisheye:     bool = field(init=False)
+    shape:          tuple = field(init=False)
+    data:           np.ndarray = field(init=False)
+    corners:        np.ndarray = field(init=False)
+    transform:      np.ndarray = field(init=False)
+    
     
     def __post_init__(self):
         self.data = cv2.imread(self.path, cv2.IMREAD_GRAYSCALE)
         self.shape = self.data.shape
 
+    def gen_bounds(self):
+        """Generate bounds for optimization."""
+        bounds = []
+        
+        center = self.transform
+        
+        diff = 1.0
+        
+        upper = center + diff
+        lower = center - diff
+        
+        bounds.append((lower[0], upper[0]))
+        bounds.append((lower[1], upper[1]))
+        bounds.append((lower[2], upper[2]))
+
+        bounds.append((lower[3], upper[3]))
+        bounds.append((lower[4], upper[4]))
+        bounds.append((lower[5], upper[5]))        
+        
+        return bounds
 
 
 
-def read_frames(camera_type: Camera, data_path: str) -> Frames:
+
+def read_mono_frames(intrinsic_type: str, project_type: str, distortion_type: str, data_path: str) -> MonoCameraFrames:
+    camera = Camera(intrinsic_type, project_type, distortion_type)
     data_path = Path(data_path)
     
     image_paths = sorted(data_path.glob("*.png"))
     
-    return [ BasicFrame(path=str(image_path), idx=idx) for idx, image_path in enumerate(image_paths) ]
+    return [camera, [ BasicFrame(path=str(image_path), idx=idx) for idx, image_path in enumerate(image_paths) ]]
 
 
 
@@ -62,6 +86,9 @@ def is_good_frame(image: BasicFrame, min_ratio: float = 0.02, max_ratio: float =
     if ratio < min_ratio or ratio > max_ratio: return False
     
     return True
+
+
+
 
 
 
@@ -111,12 +138,3 @@ def distribution_of_corners_in_fisheye(images: List[BasicFrame]) -> np.ndarray:
     """
 
     
-
-
-if __name__ == "__main__":
-    db_path = "data/"
-    
-    frames = read_frames(db_path)
-    
-    print(len(frames))
-    print(frames[0].shape)

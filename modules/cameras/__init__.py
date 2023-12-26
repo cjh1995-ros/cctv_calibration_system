@@ -7,7 +7,7 @@ from modules.cameras.projectors import Projector, Distorter, BasicConvertor
 
 
 
-""""""
+
 INTR_OPT_PARAM_NUM : Dict[str, int]= \
 {
     "CONST":            0,
@@ -34,6 +34,15 @@ PROJECTOIN_FUNC : Dict[str, Callable] = \
     "TRIPLE_SPHERE":    Projector.triple_sphere,
 }
 
+PROJECTION_PARAM_INIT : Dict[str, Any] = \
+{
+    "PERSPECTIVE":      np.array([], dtype=np.float32),
+    "EQUIDISTANT":      np.array([], dtype=np.float32),
+    "SINGLE_SPHERE":    np.array([0.5], dtype=np.float32),
+    "DOUBLE_SPHERE":    np.array([0.5, 0.0], dtype=np.float32),
+    "TRIPLE_SPHERE":    np.array([0.5, 0.0, 0.0], dtype=np.float32),    
+}
+
 DISTORTION_PARAM_NUM : Dict[str, int] = \
 {
     "NONE":             0,
@@ -50,9 +59,19 @@ DISTORTION_FUNC : Dict[str, Callable] = \
     "EQUIDISTANT":      Distorter.equidistant,
 }
 
+DISTORTION_PARAM_INIT : Dict[str, Any] = \
+{
+    "NONE":             None,
+    "POLYNOMIAL":       np.array([-0.2, 0.0], dtype=np.float32),
+    "FOV":              np.array([0.5], dtype=np.float32),
+    "EQUIDISTANT":      None
+}
 
 @dataclass
 class Camera:
+    """
+        [f, cx, cy, alpha, gamma, ..., k1, k2]
+    """
     _intr_opt_type:     str
     _proj_func_type:    str
     _dist_type:         str
@@ -62,17 +81,23 @@ class Camera:
     dtype:              Any = np.float32
     
     def __post_init__(self):
-        self.n_opt_intr    = INTR_OPT_PARAM_NUM[self._intr_opt_type]
-        self.n_proj_func   = PROJECTION_PARAM_NUM[self._proj_func_type]
-        self.n_dist        = DISTORTION_PARAM_NUM[self._dist_type]
+        self.n_intr     = INTR_OPT_PARAM_NUM[self._intr_opt_type]
+        self.n_proj     = PROJECTION_PARAM_NUM[self._proj_func_type]
+        self.n_dist     = DISTORTION_PARAM_NUM[self._dist_type]
         
-        self.n_total = self.n_opt_intr + self.n_proj_func + self.n_dist
+        self.n_total = self.n_intr + self.n_proj + self.n_dist
         
         # Init K and dist
         self.K = np.zeros((3, 3), dtype=self.dtype)
         
         # Init params for optimization
-        self.params = np.zeros(self.n_total, dtype=self.dtype)
+        self._params = np.zeros(self.n_total, dtype=self.dtype)
+        
+        # Init projection params
+        self._params[self.n_intr:self.n_intr + self.n_proj] = PROJECTION_PARAM_INIT[self._proj_func_type]
+        
+        # Init distortion params
+        self._params[self.n_intr + self.n_proj:self.n_intr + self.n_proj + self.n_dist] = DISTORTION_PARAM_INIT[self._dist_type]
     
     def project(self, pts: np.ndarray) -> np.ndarray:
         """
@@ -84,10 +109,10 @@ class Camera:
             np.ndarray: projected point, 2d
         """
         # Project points into normalized plane, pt_u and ru
-        pts, r_us = PROJECTOIN_FUNC[self._proj_func_type](pts, self._params[self.n_opt_intr:self.n_opt_intr + self.n_proj_func])              
+        pts, r_us = PROJECTOIN_FUNC[self._proj_func_type](pts, self._params[self.n_intr:self.n_intr + self.n_proj])              
 
         # Distort points
-        r_ds = DISTORTION_FUNC[self._dist_type](r_us, self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist])
+        r_ds = DISTORTION_FUNC[self._dist_type](r_us, self._params[self.n_intr + self.n_proj:self.n_intr + self.n_proj + self.n_dist])
         
         # Rescale the normalized pixels with rd / ru
         pts = BasicConvertor.rescale(r_ds / r_us, pts)
@@ -115,10 +140,10 @@ class Camera:
         self._initial_params = initial_params
         m = 0
         n = 3
-        self.init_K(self._initial_params[m:n])
+        self.init_intrinsic(self._initial_params[m:n])
         
         m = n
-        n += self.n_proj_func
+        n += self.n_proj
         self.init_sphere(self._initial_params[m:n])
         
         m = n
@@ -126,7 +151,9 @@ class Camera:
         self.init_dist(self._initial_params[m:n])
 
     
-    def init_K(self, intr: np.ndarray):
+    def init_intrinsic(self, intr: np.ndarray):
+        assert len(intr) == 3, "Initial intrinsics shapes should be f, cx, cy"
+        
         # Init K
         self.K[0, 0] = intr[0]
         self.K[1, 1] = intr[0]
@@ -137,20 +164,27 @@ class Camera:
         if self._intr_opt_type == "CONST":
             pass
         elif self._intr_opt_type == "FOCAL":
-            self._params[:self.n_opt_intr] = intr[0]
+            self._params[:self.n_intr] = intr[0]
         elif self._intr_opt_type == "FCXCY":
-            self._params[:self.n_opt_intr] = intr
+            self._params[:self.n_intr] = intr
         elif self._intr_opt_type == "FXYCXY":
             self._params[0] = intr[0]
-            self._params[1:self.n_opt_intr] = intr
+            self._params[1:self.n_intr] = intr
+            
 
     def init_sphere(self, params: np.ndarray):
         """무조건 최적화"""
-        self._params[self.n_opt_intr:self.n_opt_intr + self.n_proj_func] = params
+        self._params[self.n_intr:self.n_intr + self.n_proj] = params
 
     def init_dist(self, params):
         """무조건 최적화"""
-        self._params[self.n_opt_intr + self.n_proj_func:self.n_opt_intr + self.n_proj_func + self.n_dist] = params
+        self._params[self.n_intr + self.n_proj:self.n_intr + self.n_proj + self.n_dist] = params
+    
+    def for_optimize(self):
+        """Return the parameters for optimization."""
+        
+        return self._params, np.array([self.K[1, 1], self.K[2, 1]], dtype=self.dtype)
+    
     
     ######## Setter and Getter ########    
     @property
@@ -161,8 +195,7 @@ class Camera:
     def params(self, params: np.ndarray):
         self._params = params
         
-        # Change K, R, t
-        # 1. K
+        # Change K
         if self._intr_opt_type == "CONST":
             pass
         elif self._intr_opt_type == "FOCAL":
@@ -178,3 +211,59 @@ class Camera:
             self.K[1, 1] = self._params[1]
             self.K[0, 2] = self._params[2]
             self.K[1, 2] = self._params[3]
+            
+    def gen_bounds(self):
+        """Generate bounds for optimization."""
+        bounds = []
+        
+        f = self.K[0, 0]
+        cx = self.K[0, 2]
+        cy = self.K[1, 2]
+        
+        f_min = f * 0.5
+        f_max = f * 1.5
+        
+        cx_min = 0.5 * cx
+        cx_max = 1.5 * cx
+        
+        cy_min = 0.5 * cy
+        cy_max = 1.5 * cy
+        
+        # Intrinsics
+        if self._intr_opt_type == "CONST":
+            pass
+        elif self._intr_opt_type == "FOCAL":
+            bounds.append((f_min, f_max))
+        elif self._intr_opt_type == "FCXCY":
+            bounds.append((f_min, f_max))
+            bounds.append((cx_min, cx_max))
+            bounds.append((cy_min, cy_max))
+        elif self._intr_opt_type == "FXYCXY":
+            bounds.append((f_min, f_max))
+            bounds.append((f_min, f_max))
+            bounds.append((cx_min, cx_max))
+            bounds.append((cy_min, cy_max))
+            
+        # Projection
+        if self._proj_func_type == "SINGLE_SPHERE":
+            bounds.append((0, 1))
+        elif self._proj_func_type == "DOUBLE_SPHERE":
+            bounds.append((0, 1))
+            bounds.append((0, 1))
+        elif self._proj_func_type == "TRIPLE_SPHERE":
+            bounds.append((0, 1))
+            bounds.append((0, 1))
+            bounds.append((0, 1))
+        
+        # Distortion
+        if self._dist_type == "NONE":
+            pass
+        elif self._dist_type == "POLYNOMIAL":
+            bounds.append((-0.5, 0.5))
+            bounds.append((-0.5, 0.5))
+        elif self._dist_type == "FOV":
+            bounds.append((0, np.pi))
+        elif self._dist_type == "EQUIDISTANT":
+            pass
+        
+        return bounds

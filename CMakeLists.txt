@@ -1,10 +1,14 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.27)
 project(diverse_camera_model_calibration)
 
 add_compile_options(-std=c++14)
-set(CMAKE_BUILD_TYPE "Release")
+
+# list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt" "/opt/homebrew/lib" "/usr/local/include")
+set(CMAKE_PREFIX_PATH "/usr/local/include" "/opt/homebrew/opt" "/opt/homebrew/lib")
+set(CMAKE_BUILD_TYPE "Debug")
+
 find_package(OpenCV REQUIRED)
-find_package( Ceres REQUIRED)
+find_package(Ceres REQUIRED)
 
 include_directories(
   include

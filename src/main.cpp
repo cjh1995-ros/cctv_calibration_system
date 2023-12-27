@@ -12,70 +12,63 @@
 
 
 
+double estimate_focal(const std::vector<std::vector<cv::Point2d>>& pixels, const cv::Point2d opt_center, const cv::Size chessboard_num)
+{
+    double focal_ = 0;
 
+    double cx_ = opt_center.x;
+    double cy_ = opt_center.y;
 
+    std::vector<std::vector<cv::Point2d>> pixels_center;
+    for(int i = 0; i < pixels.size(); i++)
+    {
+        std::vector<cv::Point2d> pixels_tmp;
+        for(int j = 0; j < pixels[i].size(); j++)
+        {
+            cv::Point2d p(pixels[i][j].x - cx_, pixels[i][j].y - cy_);
+            pixels_tmp.push_back(p);
+        }
+        pixels_center.push_back(pixels_tmp);
+    }
+    int total_num = 0;
+    for(int k = 0; k < pixels_center.size(); k++)
+    {
+        if(pixels_center[k].size() == 0) continue;
+        for(int i = 0; i < chessboard_num.height; i++)
+        {
+            cv::Mat P(cv::Size(4, chessboard_num.width), CV_64F);
+            for(int j = 0; j < chessboard_num.width; j++)
+            {
+                double x = pixels_center[k][i*chessboard_num.width+j].x;
+                double y = pixels_center[k][i*chessboard_num.width+j].y;
+                P.at<double>(j, 0) = x;
+                P.at<double>(j, 1) = y;
+                P.at<double>(j, 2) = 0.5;
+                P.at<double>(j, 3) = -0.5*(x*x+y*y);
+            }
+            cv::Mat C;
+            cv::SVD::solveZ(P, C);
+            double c1 = C.at<double>(0);
+            double c2 = C.at<double>(1);
+            double c3 = C.at<double>(2);
+            double c4 = C.at<double>(3);
+            double t = c1*c1 + c2*c2 + c3*c4;
+            if(t < 0) continue;
+            double d = std::sqrt(1/t);
+            double nx = c1 * d;
+            double ny = c2 * d;
+            if(nx*nx+ny*ny > 0.95) continue;
+            double nz = std::sqrt(1-nx*nx-ny*ny);
+            double gamma = fabs(c3*d/nz);
+            focal_ += gamma;
+            total_num++;
+        }
+    }
 
+    focal_ /= total_num;
 
-// double estimate_focal(const std::vector<std::vector<cv::Point2d>>& pixels, const std::vector<cv::Point3d>& worlds, cv::Size img_size, const cv::Size chessboard_num)
-// {
-//     double focal_ = 0;
-//     // 将像素坐标原点移到(cx, cy)
-//     std::vector<std::vector<cv::Point2d>> pixels_center;
-//     for(int i = 0; i < pixels.size(); i++)
-//     {
-//         std::vector<cv::Point2d> pixels_tmp;
-//         for(int j = 0; j < pixels[i].size(); j++)
-//         {
-//             cv::Point2d p(pixels[i][j].x - cx_, pixels[i][j].y - cy_);
-//             pixels_tmp.push_back(p);
-//         }
-//         pixels_center.push_back(pixels_tmp);
-//     }
-//     int total_num = 0;
-//     for(int k = 0; k < pixels_center.size(); k++)
-//     {
-//         if(pixels_center[k].size() == 0) continue;
-//         for(int i = 0; i < chessboard_num.height; i++)
-//         {
-//             cv::Mat P(cv::Size(4, chessboard_num.width), CV_64F);
-//             for(int j = 0; j < chessboard_num.width; j++)
-//             {
-//                 double x = pixels_center[k][i*chessboard_num.width+j].x;
-//                 double y = pixels_center[k][i*chessboard_num.width+j].y;
-//                 P.at<double>(j, 0) = x;
-//                 P.at<double>(j, 1) = y;
-//                 P.at<double>(j, 2) = 0.5;
-//                 P.at<double>(j, 3) = -0.5*(x*x+y*y);
-//             }
-//             cv::Mat C;
-//             cv::SVD::solveZ(P, C);
-//             double c1 = C.at<double>(0);
-//             double c2 = C.at<double>(1);
-//             double c3 = C.at<double>(2);
-//             double c4 = C.at<double>(3);
-//             double t = c1*c1 + c2*c2 + c3*c4;
-//             if(t < 0) continue;
-//             double d = std::sqrt(1/t);
-//             double nx = c1 * d;
-//             double ny = c2 * d;
-//             if(nx*nx+ny*ny > 0.95) continue;
-//             double nz = std::sqrt(1-nx*nx-ny*ny);
-//             double gamma = fabs(c3*d/nz);
-//             focal_ += gamma;
-//             total_num++;
-//         }
-//     }
-//     if(total_num > 0)
-//     {
-//         focal_ /= total_num;
-//     }
-//     else
-//     {
-//         std::cout << "焦距估计失败" << std::endl;
-//     }
-
-//     return focal_;
-// }
+    return focal_;
+}
 
 
 
@@ -241,6 +234,11 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Estimate focal length by TSCM method
+    cv::Point2d opt_center(cx, cy);
+    double focal = estimate_focal(corners, opt_center, board_size);
+
+    std::cout << "Focal by TSCM: " << focal << std::endl;
 
     // Optimize with ceres
     ceres::Problem problem;

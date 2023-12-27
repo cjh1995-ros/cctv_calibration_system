@@ -10,6 +10,18 @@ find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  jsoncpp
+  GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
+  GIT_TAG        master
+)
+
+FetchContent_MakeAvailable(jsoncpp)
+
+
+
 include_directories(
   include
   ${OpenCV_INCLUDE_DIRECTORIES}
@@ -23,4 +35,6 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBRARIES}
   ${CERES_LIBRARIES}
+  jsoncpp_lib_static
 )
+target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncpp_SOURCE_DIR}/include)

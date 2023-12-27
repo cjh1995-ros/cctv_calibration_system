@@ -136,5 +136,3 @@ def distribution_of_corners_in_fisheye(images: List[BasicFrame]) -> np.ndarray:
     Returns:
         np.ndarray: _description_
     """
-
-    

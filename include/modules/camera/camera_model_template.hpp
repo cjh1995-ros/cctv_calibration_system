@@ -24,8 +24,8 @@ public:
     CameraModel() = default;
     virtual ~CameraModel() {}
 
-    virtual cv::Point2d const noexcept project(const cv::Point3d point) const = 0;
-    virtual cv::Point3d const noexcept unproject(const cv::Point2d pixel) const = 0;
+    virtual cv::Point2d project(const cv::Point3d point) const noexcept = 0;
+    virtual cv::Point3d unproject(const cv::Point2d pixel) const noexcept = 0;
     
     std::vector<double> params() const noexcept { return params_; }
     void set_params(const std::vector<double> params) noexcept { params_ = params; }
@@ -36,11 +36,11 @@ public:
         cv::Point3d point_;
         BasicReprojectionError(cv::Point2d observed, cv::Point3d point) : observed_(observed), point_(point) {}
 
-        template <typename T>
-        virtual bool operator() (const T* const intrinsic_, const T* const transform, T* residuals) const = 0;
+        // template <typename T>
+        // bool operator() (const T* const intrinsic_, const T* const transform, T* residuals) const = 0;
     };
 
-private:
+protected:
     std::vector<double> params_;
 };
 

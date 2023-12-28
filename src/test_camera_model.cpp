@@ -2,6 +2,11 @@
 #include <gtest/gtest.h>
 
 #include "modules/camera/brown_conrady.hpp"
+#include "modules/camera/kannala_brandt.hpp"
+#include "modules/camera/single_sphere.hpp"
+#include "modules/camera/double_sphere.hpp"
+#include "modules/camera/triple_sphere.hpp"
+
 
 #include <iostream>
 

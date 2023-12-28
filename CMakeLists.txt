@@ -45,17 +45,28 @@ target_link_libraries(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncpp_SOURCE_DIR}/include)
 
+add_executable(DSCM_calib
+    src/main_calib.cpp
+)
+
+target_link_libraries(DSCM_calib
+  ${OpenCV_LIBRARIES}
+  ${CERES_LIBRARIES}
+  # jsoncpp_lib_static
+  jsoncpp_lib
+)
+target_include_directories(DSCM_calib PRIVATE ${jsoncpp_SOURCE_DIR}/include)
 
 
 
 enable_testing()
 
 add_executable(
-  test_brown_conrady
-  src/test_brown_conrady.cpp
+  test_camera_model
+  src/test_camera_model.cpp
 )
 target_link_libraries(
-  test_brown_conrady
+  test_camera_model
   GTest::gtest_main
   ${OpenCV_LIBRARIES}
   ${CERES_LIBRARIES}
@@ -63,4 +74,4 @@ target_link_libraries(
 
 
 include(GoogleTest)
-gtest_discover_tests(test_brown_conrady)
+gtest_discover_tests(test_camera_model)

@@ -14,21 +14,27 @@ namespace DCMC
 {
 
 
-class BrownConrady : public CameraModel
+using std::atan2;
+using std::sqrt;
+
+
+class KannalaBrandt : public CameraModel
 {
+
 public:
-    BrownConrady() : CameraModel() {}
-    explicit BrownConrady(const std::vector<double>& params) : CameraModel()
+    KannalaBrandt() : CameraModel() {}
+    explicit KannalaBrandt(const std::vector<double> &params) : CameraModel()
     {
-        if (params.size() != 6) {
-            throw std::invalid_argument("BrownConrady should have 6 parameters, fx, fy, cx, cy, k1, k2");
-        }        
+        if (params.size() != 8)
+        {
+            throw std::invalid_argument("KannalaBrandt should have 8 parameters, fx, fy, cx, cy, k1, k2, k3, k4");
+        }
         params_ = params;
     }
 
     void init_params(const double& f, const double& cx, const double& cy) noexcept override
     {
-        params_ = { f, f, cx, cy, -0.2, 0.1 };
+        params_ = { f, f, cx, cy, -0.2, 0.1, 0.0, 0.0 };
     }
 
     cv::Point2d project(const cv::Point3d& point) const noexcept override
@@ -39,17 +45,24 @@ public:
         const double cy = params_[3];
         const double k1 = params_[4];
         const double k2 = params_[5];
+        const double k3 = params_[6];
+        const double k4 = params_[7];
 
         const double x = point.x / point.z;
         const double y = point.y / point.z;
 
-        const double r2 = x * x + y * y;
-        const double r4 = r2 * r2;
+        const double r = sqrt(x * x + y * y);
+        const double theta = atan2(r, 1.0);
 
-        const double radial = 1.0 + k1 * r2 + k2 * r4;
+        const double theta2 = theta * theta;
+        const double theta4 = theta2 * theta2;
+        const double theta6 = theta4 * theta2;
+        const double theta8 = theta6 * theta2;
 
-        const double u = fx * x * radial + cx;
-        const double v = fy * y * radial + cy;
+        const double theta_d = theta * (1.0 + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8) / r;
+
+        const double u = fx * theta_d * x + cx;
+        const double v = fy * theta_d * y + cy;
 
         return cv::Point2d(u, v);
     }
@@ -62,51 +75,43 @@ public:
         const double cy = params_[3];
         const double k1 = params_[4];
         const double k2 = params_[5];
+        const double k3 = params_[6];
+        const double k4 = params_[7];
 
         const double mx = (pix.x - cx) / fx;
         const double my = (pix.y - cy) / fy;
 
-        const double rd = std::sqrt(mx * mx + my * my);
-        double ru = gauss_newton(rd, k1, k2);
+        const double theta_d = sqrt(mx * mx + my * my);
+        const double theta = gauss_newton(theta_d, k1, k2, k3, k4);
 
-        // std::cout << "rd: " << rd << std::endl;
-        // std::cout << "ru: " << ru << std::endl;
-
-        const double x = mx * ru / rd;
-        const double y = my * ru / rd;
+        const double x = mx * theta / theta_d;
+        const double y = my * theta / theta_d;
 
         return cv::Point3d(x, y, 1.0);
     }
 
-
-    double gauss_newton(double rd, double k1, double k2) const noexcept
+    double gauss_newton(double rd, double k1, double k2, double k3, double k4) const noexcept
     {
         double ru = rd;
         double init_diff = std::numeric_limits<double>::max();
         double step = 0.1;
         size_t max_i = 100;
 
-        for (size_t i=0; i<max_i; i++)
+        for (int i = 0; i < max_i; i++)
         {
-            double ru2 = ru * ru;
-            double ru4 = ru2 * ru2;
-            double up = ru * (1 + k1 * ru2 + k2 * ru4);
-            double down = 1 + 3 * k1 * ru2 + 5 * k2 * ru4;
-            double diff = rd - up;
+            const double ru2 = ru * ru;
+            const double ru4 = ru2 * ru2;
+            const double ru6 = ru4 * ru2;
+            const double ru8 = ru6 * ru2;
 
-            if ((i == max_i - 1) && (std::abs(diff) > 1e-4)) 
-                std::cout << "Gauss-Newton iteration did not converge" << std::endl;
+            const double f = ru * (1.0 + k1 * ru2 + k2 * ru4 + k3 * ru6 + k4 * ru8) - rd;
+            const double df = 1.0 + 3.0 * k1 * ru2 + 5.0 * k2 * ru4 + 7.0 * k3 * ru6 + 9.0 * k4 * ru8;
 
-            if (init_diff > std::abs(diff)) step *= 1.2;
-            else step *= -0.5;
+            if ((i == max_i - 1) && (std::abs(f) > 1e-4)) std::cout << "GN itr did not converge" << std::endl;
+            if (std::abs(f) < 1e-7) break;
 
-            if (std::abs(diff) < 1e-7) {
-                // std::cout << "Last itr: " << i << std::endl;
-                break;
-            }
-
-            init_diff = std::abs(diff);
-            ru -= step * up / down;
+            init_diff = std::abs(f);
+            ru -= step * f / df;
         }
         return ru;
     }
@@ -127,6 +132,8 @@ public:
             T cy = intrinsic_[3];
             T k1 = intrinsic_[4];
             T k2 = intrinsic_[5];
+            T k3 = intrinsic_[6];
+            T k4 = intrinsic_[7];
 
             T P[3];
             T point[3] = {T(point_.x), T(point_.y), T(point_.z)};
@@ -141,10 +148,14 @@ public:
             T y = P[1] / P[2];
             T one = T(1);
 
-            T r2 = x * x + y * y;
-            T r4 = r2 * r2;
+            T r = sqrt(x * x + y * y);
+            T theta = atan2(r, one);
+            T theta2 = theta * theta;
+            T theta4 = theta2 * theta2;
+            T theta6 = theta4 * theta2;
+            T theta8 = theta6 * theta2;
 
-            T radial = one + k1 * r2 + k2 * r4;
+            T radial = theta * (one + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8) / r;
 
             T u = fx * x * radial + cx;
             T v = fy * y * radial + cy;
@@ -157,12 +168,13 @@ public:
 
         static ceres::CostFunction* create(const cv::Point2d& obs, const cv::Point3d& pt)
         {
-            return (new ceres::AutoDiffCostFunction<ReprojectionError, 2, 6, 6>(new ReprojectionError(obs, pt)));
+            return (new ceres::AutoDiffCostFunction<ReprojectionError, 2, 8, 6>(new ReprojectionError(obs, pt)));
         }
 
     };
 
 };
+
 
 
 

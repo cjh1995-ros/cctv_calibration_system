@@ -30,7 +30,7 @@ public:
 
     void init_params(const double& f, const double& cx, const double& cy) noexcept override
     {
-        params_ = { f, f, cx, cy, 0.0001, 0.0001, 0.5 };
+        params_ = { f, f, cx, cy, 0.5, 0.5, 0.5 };
     }
 
     cv::Point2d project(const cv::Point3d& point) const noexcept override

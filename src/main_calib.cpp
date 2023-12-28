@@ -161,8 +161,13 @@ int main(int argc, char** argv)
 
 
     if (cfg.camera_model == "TripleSphere") {
+        problem.SetParameterUpperBound(p_camera_params, 4, 1.000);
+        problem.SetParameterUpperBound(p_camera_params, 5, 1.000);
+        problem.SetParameterUpperBound(p_camera_params, 6, 1.000);
+
         problem.SetParameterLowerBound(p_camera_params, 4, 0.0001);
         problem.SetParameterLowerBound(p_camera_params, 5, 0.0001);
+        problem.SetParameterLowerBound(p_camera_params, 6, 0.0001);
     }
 
 

@@ -194,10 +194,31 @@ def test_pcl_03():
     return points
 
 
+def test_pcl_04():
+    return np.array([[0., 0., 0.],
+    [1., 0., 0.],
+    [2., 0., 0.],
+    [3., 0., 0.],
+    [0., 1., 1.],
+    [1., 1., 1.],
+    [2., 1., 1.],
+    [3., 1., 1.],
+    [0., 2., 2.],
+    [1., 2., 2.],
+    [2., 2., 2.],
+    [3., 2., 2.],
+    [0., 3., 3.],
+    [1., 3., 3.],
+    [2., 3., 3.],
+    [3., 3., 3.]]
+    , dtype=np.float64)
+
+
 POINT = {
     "case1": test_pcl_01,
     "case2": test_pcl_02,
     "case3": test_pcl_03,
+    "case4": test_pcl_04,
 }
 
 
@@ -208,7 +229,7 @@ if __name__ == '__main__':
     cam = np.array([cam.initial_params for cam in cameras])
     # np.save("./data/cameras.npy", cam)
 
-    points = POINT["case3"]()
+    points = POINT["case4"]()
     
     vz = MatplotVisualizer(is_inv=True)
     vz.vis_3d(None, cameras, points)

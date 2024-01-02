@@ -5,8 +5,9 @@
 #include "modules/camera/single_sphere.hpp"
 #include "modules/camera/double_sphere.hpp"
 #include "modules/camera/triple_sphere.hpp"
+#include "modules/camera/quadra_sphere.hpp"
 #include "modules/frame/frame.hpp"
-#include "modules/board/board.hpp"
+#include "modules/board/chessboard.hpp"
 #include "modules/util.hpp"
 
 #include <vector>
@@ -74,6 +75,10 @@ int main(int argc, char** argv)
     {
         cam = std::make_unique<TripleSphere>();
     }
+    else if (cfg.camera_model == "QuadraSphere")
+    {
+        cam = std::make_unique<QuadraSphere>();
+    }
     else
     {
         std::cout << "Invalid camera model: " << cfg.camera_model << std::endl;
@@ -119,12 +124,19 @@ int main(int argc, char** argv)
 
     
     // Optimize with ceres
+    std::cout << "Optimzing with ceres..." << std::endl;
     ceres::Problem problem;
 
     std::vector<double> camera_params = cam->params();
     double* p_camera_params = camera_params.data();
 
+    std::cout << "Length of initial camera parameters: " << camera_params.size() << std::endl;
+
+
     std::vector<cv::Vec6d> frame_poses(good_frames.size());
+
+    double huber_loss_threshold = 1.0;
+    ceres::LossFunction* loss_function = new ceres::HuberLoss(huber_loss_threshold);
 
 
     for (size_t i = 0; i < good_frames.size(); i++) {
@@ -146,6 +158,8 @@ int main(int argc, char** argv)
                 cost_function = DoubleSphere::ReprojectionError::create(object_pixel, point);
             else if (cfg.camera_model == "TripleSphere")
                 cost_function = TripleSphere::ReprojectionError::create(object_pixel, point);
+            else if (cfg.camera_model == "QuadraSphere")
+                cost_function = QuadraSphere::ReprojectionError::create(object_pixel, point);
             else
             {
                 std::cout << "Invalid camera model: " << cfg.camera_model << std::endl;
@@ -154,7 +168,7 @@ int main(int argc, char** argv)
 
             double* p_frame_pose = (double*) (&frame_poses[i]);
 
-            problem.AddResidualBlock(cost_function, nullptr, p_camera_params, p_frame_pose);
+            problem.AddResidualBlock(cost_function, loss_function, p_camera_params, p_frame_pose);
             // problem.AddResidualBlock(cost_function, nullptr, cam->params().data(), good_frames[i].get_transform().val);
         }
     }
@@ -169,12 +183,25 @@ int main(int argc, char** argv)
         problem.SetParameterLowerBound(p_camera_params, 5, 0.0001);
         problem.SetParameterLowerBound(p_camera_params, 6, 0.0001);
     }
+    else if (cfg.camera_model == "QuadraSphere") {
+        problem.SetParameterUpperBound(p_camera_params, 4, 1.000);
+        problem.SetParameterUpperBound(p_camera_params, 5, 1.000);
+        problem.SetParameterUpperBound(p_camera_params, 6, 1.000);
+        problem.SetParameterUpperBound(p_camera_params, 7, 1.000);
 
+        problem.SetParameterLowerBound(p_camera_params, 4, 0.0001);
+        problem.SetParameterLowerBound(p_camera_params, 5, 0.0001);
+        problem.SetParameterLowerBound(p_camera_params, 6, 0.0001);
+        problem.SetParameterLowerBound(p_camera_params, 7, 0.0001);
+    }
+
+    std::cout << "Let's go!" << std::endl;
 
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::ITERATIVE_SCHUR;
     options.num_threads = 8;
     options.minimizer_progress_to_stdout = true;
+    options.max_num_iterations = 500;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 

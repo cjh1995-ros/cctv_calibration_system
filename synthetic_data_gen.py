@@ -1,12 +1,12 @@
-from test_data_generate_bed import test_cameras, POINT
+from test_data_generate_bed import test_cameras, test_cameras2,POINT
 import json
 import numpy as np
 
 
 if __name__ == '__main__':
-    numbering = 3
+    numbering = 4
     
-    cameras = test_cameras()
+    cameras = test_cameras2()
     markers = POINT[f"case{numbering}"]()
     
     # Save camera params

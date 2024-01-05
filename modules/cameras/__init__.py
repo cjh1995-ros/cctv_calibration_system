@@ -72,20 +72,25 @@ class Camera:
     """
         [f, cx, cy, alpha, gamma, ..., k1, k2]
     """
+    id:                 int
     _intr_opt_type:     str
+    _is_opt_extr:       bool
     _proj_func_type:    str
     _dist_type:         str
     _params:            np.ndarray = field(init=False)
     _initial_params:    np.ndarray = field(init=False)
     K:                  np.ndarray = field(init=False)
+    R:                  np.ndarray = field(init=False)
+    t:                  np.ndarray = field(init=False)    
     dtype:              Any = np.float32
     
     def __post_init__(self):
         self.n_intr     = INTR_OPT_PARAM_NUM[self._intr_opt_type]
+        self.n_extr     = 6 if self._is_opt_extr else 0        
         self.n_proj     = PROJECTION_PARAM_NUM[self._proj_func_type]
         self.n_dist     = DISTORTION_PARAM_NUM[self._dist_type]
         
-        self.n_total = self.n_intr + self.n_proj + self.n_dist
+        self.n_total = self.n_intr + self.n_proj + self.n_dist + self.n_extr
         
         # Init K and dist
         self.K = np.zeros((3, 3), dtype=self.dtype)
@@ -108,6 +113,8 @@ class Camera:
         Returns:
             np.ndarray: projected point, 2d
         """
+        pts = BasicConvertor.world_to_camera(pts, self.R, self.t)
+        
         # Project points into normalized plane, pt_u and ru
         pts, r_us = PROJECTOIN_FUNC[self._proj_func_type](pts, self._params[self.n_intr:self.n_intr + self.n_proj])              
 
@@ -135,8 +142,9 @@ class Camera:
                 It should be full parameters for initializing params.
                 Initialize K, dist, extrinsic, sphere params
                 params should be like this: [intr, projection(sphere), dist, extrinsic]
-                ex) [f, cx, cy, alpha, gamma, ..., k1, k2, r, t]
+                ex) [f, cx, cy, alpha, gamma, ..., k1, k2]
         """
+        # assert(len(initial_params) == self.n_total), f"Initial params should be {self.n_total} length."
         self._initial_params = initial_params
         m = 0
         n = 3
@@ -149,6 +157,9 @@ class Camera:
         m = n
         n += self.n_dist
         self.init_dist(self._initial_params[m:n])
+        
+        self.init_transform(self._initial_params[-6:])
+
 
     
     def init_intrinsic(self, intr: np.ndarray):
@@ -179,7 +190,14 @@ class Camera:
     def init_dist(self, params):
         """무조건 최적화"""
         self._params[self.n_intr + self.n_proj:self.n_intr + self.n_proj + self.n_dist] = params
-    
+
+    def init_transform(self, params: np.ndarray):
+        self.R = params[:3]
+        self.t = params[3:]
+        
+        if self._is_opt_extr:
+            self._params[-self.n_extr:] = params    
+            
     def for_optimize(self):
         """Return the parameters for optimization."""
         
@@ -211,7 +229,12 @@ class Camera:
             self.K[1, 1] = self._params[1]
             self.K[0, 2] = self._params[2]
             self.K[1, 2] = self._params[3]
-            
+
+        # 2. R, t
+        if self._is_opt_extr:
+            self.R = self._params[-6:-3]
+            self.t = self._params[-3:]
+                    
     def gen_bounds(self):
         """Generate bounds for optimization."""
         bounds = []
@@ -220,14 +243,14 @@ class Camera:
         cx = self.K[0, 2]
         cy = self.K[1, 2]
         
-        f_min = f * 0.5
-        f_max = f * 1.5
+        f_min = f * 0.75
+        f_max = f * 1.25
         
-        cx_min = 0.5 * cx
-        cx_max = 1.5 * cx
+        cx_min = 0.75 * cx
+        cx_max = 1.25 * cx
         
-        cy_min = 0.5 * cy
-        cy_max = 1.5 * cy
+        cy_min = 0.75 * cy
+        cy_max = 1.25 * cy
         
         # Intrinsics
         if self._intr_opt_type == "CONST":
@@ -265,5 +288,14 @@ class Camera:
             bounds.append((0, np.pi))
         elif self._dist_type == "EQUIDISTANT":
             pass
+
+        # extrinsic
+        if self._is_opt_extr:
+            bounds.append((-np.pi, np.pi))
+            bounds.append((-np.pi, np.pi))
+            bounds.append((-np.pi, np.pi))
+            bounds.append((-10, 10))
+            bounds.append((-10, 10))
+            bounds.append((-10, 10))
         
         return bounds
